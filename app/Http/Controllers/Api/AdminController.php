@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -199,6 +200,9 @@ class AdminController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
+        // Generate slug from name
+        $validated['slug'] = \Str::slug($validated['name']);
+
         $product = Product::create($validated);
 
         return response()->json([
@@ -364,6 +368,142 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'data' => $user,
+        ]);
+    }
+
+    /**
+     * Get sales by period (day, week, month)
+     */
+    public function getSalesByPeriod(): JsonResponse
+    {
+        $now = now();
+        $orders = Order::where('payment_status', 'paid')->get();
+
+        // Sales by Day (last 7 days)
+        $salesByDay = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = $now->copy()->subDays($i);
+            $dateKey = $date->format('d/m');
+            $dayOrders = $orders->filter(function ($order) use ($date) {
+                return $order->created_at->format('Y-m-d') === $date->format('Y-m-d');
+            });
+            $salesByDay[$dateKey] = (float) $dayOrders->sum('total_amount');
+        }
+
+        // Sales by Week (last 4 weeks)
+        $salesByWeek = [];
+        for ($i = 3; $i >= 0; $i--) {
+            $weekStart = $now->copy()->subDays(($i * 7) + 6)->startOfDay();
+            $weekEnd = $now->copy()->subDays($i * 7)->endOfDay();
+            $weekKey = 'Sem ' . $weekStart->format('d/m');
+            $weekOrders = $orders->filter(function ($order) use ($weekStart, $weekEnd) {
+                return $order->created_at->between($weekStart, $weekEnd);
+            });
+            $salesByWeek[$weekKey] = (float) $weekOrders->sum('total_amount');
+        }
+
+        // Sales by Month (last 6 months)
+        $salesByMonth = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = $now->copy()->subMonths($i);
+            $monthKey = $month->format('M Y');
+            $monthOrders = $orders->filter(function ($order) use ($month) {
+                return $order->created_at->year == $month->year &&
+                       $order->created_at->month == $month->month;
+            });
+            $salesByMonth[$monthKey] = (float) $monthOrders->sum('total_amount');
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'by_day' => $salesByDay,
+                'by_week' => $salesByWeek,
+                'by_month' => $salesByMonth,
+            ],
+        ]);
+    }
+
+    /**
+     * Get top selling products
+     */
+    public function getTopSellingProducts(): JsonResponse
+    {
+        $topProducts = DB::table('order_items')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->where('orders.payment_status', 'paid')
+            ->select(
+                'products.id',
+                'products.name as product_name',
+                'products.sku',
+                'products.images',
+                'products.price',
+                DB::raw('SUM(order_items.quantity) as total_quantity'),
+                DB::raw('SUM(order_items.price * order_items.quantity) as total_revenue')
+            )
+            ->groupBy('products.id', 'products.name', 'products.sku', 'products.images', 'products.price')
+            ->orderByDesc('total_quantity')
+            ->limit(10)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'product_id' => $item->id,
+                    'product_name' => $item->product_name,
+                    'sku' => $item->sku,
+                    'product_image' => $item->images ? json_decode($item->images, true)[0] ?? null : null,
+                    'quantity' => (int) $item->total_quantity,
+                    'revenue' => (float) $item->total_revenue,
+                    'unit_price' => (float) $item->price,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $topProducts,
+        ]);
+    }
+
+    /**
+     * Get stock statistics
+     */
+    public function getStockStatistics(): JsonResponse
+    {
+        $products = Product::all();
+        
+        $totalStockValue = $products->sum(function ($product) {
+            return $product->price * $product->stock;
+        });
+
+        $stockByProduct = $products->map(function ($product) {
+            $images = $product->images;
+            $firstImage = null;
+            if (is_array($images) && !empty($images)) {
+                $firstImage = $images[0];
+            } elseif (is_string($images)) {
+                $decoded = json_decode($images, true);
+                $firstImage = is_array($decoded) && !empty($decoded) ? $decoded[0] : null;
+            }
+
+            return [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'product_image' => $firstImage,
+                'stock' => $product->stock,
+                'unit_price' => (float) $product->price,
+                'total_value' => (float) ($product->price * $product->stock),
+                'sku' => $product->sku,
+            ];
+        })->sortByDesc('total_value')->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_stock_value' => (float) $totalStockValue,
+                'total_products' => $products->count(),
+                'total_units' => $products->sum('stock'),
+                'by_product' => $stockByProduct,
+            ],
         ]);
     }
 }

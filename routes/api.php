@@ -113,5 +113,11 @@ Route::prefix('admin')->group(function () {
             Route::get('/', [AdminController::class, 'getUsers']);
             Route::get('/{id}', [AdminController::class, 'getUser']);
         });
+
+        Route::prefix('statistics')->group(function () {
+            Route::get('/sales-by-period', [AdminController::class, 'getSalesByPeriod']);
+            Route::get('/top-selling-products', [AdminController::class, 'getTopSellingProducts']);
+            Route::get('/stock', [AdminController::class, 'getStockStatistics']);
+        });
     });
 });
