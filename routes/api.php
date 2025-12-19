@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\FavoritesController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\PaymentMethodController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -78,7 +79,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{paymentMethod}', [PaymentMethodController::class, 'destroy']);
         Route::post('/{paymentMethod}/set-default', [PaymentMethodController::class, 'setDefault']);
     });
+
+    Route::prefix('payments')->group(function () {
+        Route::post('/paygate/initiate', [PaymentController::class, 'initiatePayGate']);
+        Route::post('/paygate/check-status', [PaymentController::class, 'checkPaymentStatus']);
+        Route::post('/card/process', [PaymentController::class, 'processCardPayment']);
+    });
 });
+
+// Public payment callback routes (no auth required)
+Route::post('/payments/paygate/callback', [PaymentController::class, 'payGateCallback']);
 
 // Admin routes
 Route::prefix('admin')->group(function () {

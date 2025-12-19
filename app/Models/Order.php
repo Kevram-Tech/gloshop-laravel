@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -49,6 +50,14 @@ class Order extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Get the payment transactions for the order.
+     */
+    public function paymentTransactions()
+    {
+        return $this->hasMany(PaymentTransaction::class);
     }
 }
 
