@@ -14,8 +14,10 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        // Truncate products table first
-        \DB::table('products')->truncate();
+        // Delete all products first (can't use truncate due to foreign key constraints)
+        \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Product::query()->delete();
+        \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         
         // Récupérer les catégories
         $vetements = Category::where('slug', 'vetements')->first();
