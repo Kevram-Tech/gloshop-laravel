@@ -15,6 +15,29 @@ use Illuminate\Support\Str;
 class AdminController extends Controller
 {
     /**
+     * Transform product images to full URLs.
+     */
+    private function transformImages($images, $baseUrl = null)
+    {
+        if (empty($images) || !is_array($images)) {
+            return [];
+        }
+
+        $baseUrl = $baseUrl ?? config('app.url', 'http://31.97.185.5:8002');
+        
+        return array_map(function ($image) use ($baseUrl) {
+            if (filter_var($image, FILTER_VALIDATE_URL)) {
+                return $image;
+            }
+            if (strpos($image, 'http') !== 0) {
+                $image = ltrim($image, '/');
+                return rtrim($baseUrl, '/') . '/storage/' . $image;
+            }
+            return $image;
+        }, $images);
+    }
+
+    /**
      * Admin login (same as regular login for now)
      */
     public function login(Request $request): JsonResponse
@@ -161,6 +184,14 @@ class AdminController extends Controller
         $perPage = $request->get('per_page', 20);
         $products = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
+        // Transform images to full URLs
+        $products->getCollection()->transform(function ($product) {
+            if (!empty($product->images)) {
+                $product->images = $this->transformImages($product->images);
+            }
+            return $product;
+        });
+
         return response()->json([
             'success' => true,
             'data' => $products,
@@ -173,6 +204,21 @@ class AdminController extends Controller
     public function getProduct(int $id): JsonResponse
     {
         $product = Product::with('category')->findOrFail($id);
+
+        // Transform images to full URLs
+        $baseUrl = config('app.url', 'http://31.97.185.5:8002');
+        if (!empty($product->images)) {
+            $product->images = array_map(function ($image) use ($baseUrl) {
+                if (filter_var($image, FILTER_VALIDATE_URL)) {
+                    return $image;
+                }
+                if (strpos($image, 'http') !== 0) {
+                    $image = ltrim($image, '/');
+                    return rtrim($baseUrl, '/') . '/storage/' . $image;
+                }
+                return $image;
+            }, $product->images);
+        }
 
         return response()->json([
             'success' => true,
@@ -235,11 +281,17 @@ class AdminController extends Controller
         ]);
 
         $product->update($validated);
+        $product->refresh();
+
+        // Transform images to full URLs
+        if (!empty($product->images)) {
+            $product->images = $this->transformImages($product->images);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Produit mis à jour avec succès',
-            'data' => $product->fresh(),
+            'data' => $product,
         ]);
     }
 
@@ -447,12 +499,21 @@ class AdminController extends Controller
             ->limit(10)
             ->get()
             ->map(function ($item) {
+                $images = $item->images ? json_decode($item->images, true) : [];
+                $firstImage = !empty($images) ? $images[0] : null;
+                
+                // Transform image URL if needed
+                if ($firstImage && !filter_var($firstImage, FILTER_VALIDATE_URL)) {
+                    $baseUrl = config('app.url', 'http://31.97.185.5:8002');
+                    $firstImage = rtrim($baseUrl, '/') . '/storage/' . ltrim($firstImage, '/');
+                }
+                
                 return [
                     'product_id' => $item->id,
                     'product_name' => $item->product_name,
                     'sku' => $item->sku,
-                    'product_image' => $item->images ? json_decode($item->images, true)[0] ?? null : null,
-                    'quantity' => (int) $item->total_quantity,
+                    'product_image' => $firstImage,
+                    'quantity_sold' => (int) $item->total_quantity,
                     'revenue' => (float) $item->total_revenue,
                     'unit_price' => (float) $item->price,
                 ];
@@ -476,13 +537,13 @@ class AdminController extends Controller
         });
 
         $stockByProduct = $products->map(function ($product) {
-            $images = $product->images;
-            $firstImage = null;
-            if (is_array($images) && !empty($images)) {
-                $firstImage = $images[0];
-            } elseif (is_string($images)) {
-                $decoded = json_decode($images, true);
-                $firstImage = is_array($decoded) && !empty($decoded) ? $decoded[0] : null;
+            $images = $product->images ?? [];
+            $firstImage = !empty($images) && is_array($images) ? $images[0] : null;
+            
+            // Transform image URL if needed
+            if ($firstImage && !filter_var($firstImage, FILTER_VALIDATE_URL)) {
+                $baseUrl = config('app.url', 'http://31.97.185.5:8002');
+                $firstImage = rtrim($baseUrl, '/') . '/storage/' . ltrim($firstImage, '/');
             }
 
             return [

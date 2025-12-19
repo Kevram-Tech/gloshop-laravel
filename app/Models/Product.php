@@ -82,5 +82,6 @@ class Product extends Model
     {
         return $this->discount_price !== null && $this->discount_price < $this->price;
     }
+
 }
 

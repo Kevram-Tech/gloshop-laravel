@@ -10,6 +10,29 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     /**
+     * Transform product images to full URLs.
+     */
+    private function transformImages($images, $baseUrl = null)
+    {
+        if (empty($images) || !is_array($images)) {
+            return [];
+        }
+
+        $baseUrl = $baseUrl ?? config('app.url', 'http://31.97.185.5:8002');
+        
+        return array_map(function ($image) use ($baseUrl) {
+            if (filter_var($image, FILTER_VALIDATE_URL)) {
+                return $image;
+            }
+            if (strpos($image, 'http') !== 0) {
+                $image = ltrim($image, '/');
+                return rtrim($baseUrl, '/') . '/storage/' . $image;
+            }
+            return $image;
+        }, $images);
+    }
+
+    /**
      * Display a listing of products.
      */
     public function index(Request $request): JsonResponse
@@ -44,6 +67,14 @@ class ProductController extends Controller
         $perPage = $request->get('per_page', 15);
         $products = $query->paginate($perPage);
 
+        // Transform products to ensure images are full URLs
+        $products->getCollection()->transform(function ($product) {
+            if (!empty($product->images)) {
+                $product->images = $this->transformImages($product->images);
+            }
+            return $product;
+        });
+
         return response()->json([
             'success' => true,
             'data' => $products,
@@ -66,6 +97,19 @@ class ProductController extends Controller
             ->where('is_active', true)
             ->limit(4)
             ->get();
+
+        // Transform images to full URLs
+        if (!empty($product->images)) {
+            $product->images = $this->transformImages($product->images);
+        }
+
+        // Transform related products images
+        $relatedProducts->transform(function ($relatedProduct) {
+            if (!empty($relatedProduct->images)) {
+                $relatedProduct->images = $this->transformImages($relatedProduct->images);
+            }
+            return $relatedProduct;
+        });
 
         return response()->json([
             'success' => true,
