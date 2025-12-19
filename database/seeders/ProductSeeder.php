@@ -14,6 +14,9 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        // Truncate products table first
+        \DB::table('products')->truncate();
+        
         // Récupérer les catégories
         $vetements = Category::where('slug', 'vetements')->first();
         $chaussures = Category::where('slug', 'chaussures')->first();
