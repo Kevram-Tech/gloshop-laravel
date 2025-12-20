@@ -123,9 +123,11 @@ docker-compose exec app bash
 ## Services disponibles
 
 - **Application Laravel**: http://localhost:8002
-- **Redis**: localhost:6379
+- **Redis**: localhost:6380 (port par défaut, configurable via REDIS_PORT dans .env)
 
-**Note**: La base de données MySQL est externe (sur le serveur). Configurez `DB_HOST` dans le fichier `.env` pour pointer vers votre serveur de base de données.
+**Note**: 
+- La base de données MySQL est externe (sur le serveur). Configurez `DB_HOST` dans le fichier `.env` pour pointer vers votre serveur de base de données.
+- Si le port 6380 est déjà utilisé, modifiez `REDIS_PORT` dans votre `.env` pour utiliser un autre port.
 
 ## Structure des volumes
 
