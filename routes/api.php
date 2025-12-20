@@ -106,6 +106,7 @@ Route::prefix('admin')->group(function () {
 
         Route::prefix('products')->group(function () {
             Route::get('/', [AdminController::class, 'getProducts']);
+            Route::post('/upload-images', [AdminController::class, 'uploadImages']);
             Route::post('/', [AdminController::class, 'createProduct']);
             Route::get('/{id}', [AdminController::class, 'getProduct']);
             Route::put('/{id}', [AdminController::class, 'updateProduct']);

@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -227,6 +228,46 @@ class AdminController extends Controller
     }
 
     /**
+     * Upload images
+     */
+    public function uploadImages(Request $request): JsonResponse
+    {
+        $request->validate([
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max per image
+        ]);
+
+        if (!$request->hasFile('images')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucune image fournie',
+            ], 400);
+        }
+
+        $uploadedImages = [];
+        $baseUrl = config('app.url', 'http://31.97.185.5:8002');
+
+        foreach ($request->file('images') as $image) {
+            $filename = 'products/' . time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+            $path = $image->storeAs('public', $filename);
+            $uploadedImages[] = $filename;
+        }
+
+        // Transform to full URLs
+        $imageUrls = array_map(function ($image) use ($baseUrl) {
+            return rtrim($baseUrl, '/') . '/storage/' . $image;
+        }, $uploadedImages);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Images uploadées avec succès',
+            'data' => [
+                'images' => $uploadedImages, // Relative paths for storage
+                'image_urls' => $imageUrls, // Full URLs for frontend
+            ],
+        ]);
+    }
+
+    /**
      * Create product (admin)
      */
     public function createProduct(Request $request): JsonResponse
@@ -240,16 +281,35 @@ class AdminController extends Controller
             'sku' => 'required|string|unique:products,sku',
             'stock' => 'required|integer|min:0',
             'images' => 'nullable|array',
+            'images.*' => 'nullable|string', // Can be URLs or file paths
             'sizes' => 'nullable|array',
             'colors' => 'nullable|array',
             'is_featured' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
         ]);
 
+        // Handle file uploads if present
+        if ($request->hasFile('image_files')) {
+            $uploadedImages = [];
+            foreach ($request->file('image_files') as $image) {
+                $filename = 'products/' . time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                $image->storeAs('public', $filename);
+                $uploadedImages[] = $filename;
+            }
+            // Merge with existing images if any
+            $existingImages = $validated['images'] ?? [];
+            $validated['images'] = array_merge($existingImages, $uploadedImages);
+        }
+
         // Generate slug from name
         $validated['slug'] = \Str::slug($validated['name']);
 
         $product = Product::create($validated);
+
+        // Transform images to full URLs
+        if (!empty($product->images)) {
+            $product->images = $this->transformImages($product->images);
+        }
 
         return response()->json([
             'success' => true,
@@ -274,11 +334,25 @@ class AdminController extends Controller
             'sku' => 'sometimes|string|unique:products,sku,' . $id,
             'stock' => 'sometimes|integer|min:0',
             'images' => 'nullable|array',
+            'images.*' => 'nullable|string',
             'sizes' => 'nullable|array',
             'colors' => 'nullable|array',
             'is_featured' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
         ]);
+
+        // Handle file uploads if present
+        if ($request->hasFile('image_files')) {
+            $uploadedImages = [];
+            foreach ($request->file('image_files') as $image) {
+                $filename = 'products/' . time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                $image->storeAs('public', $filename);
+                $uploadedImages[] = $filename;
+            }
+            // Merge with existing images if any
+            $existingImages = $validated['images'] ?? [];
+            $validated['images'] = array_merge($existingImages, $uploadedImages);
+        }
 
         $product->update($validated);
         $product->refresh();

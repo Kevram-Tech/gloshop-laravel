@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PHP-FPM Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gloshop_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    environment:
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE:-gloshop}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+    networks:
+      - gloshop-network
+    depends_on:
+      - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Nginx Service
+  nginx:
+    image: nginx:alpine
+    container_name: gloshop_nginx
+    restart: unless-stopped
+    ports:
+      - "8002:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - gloshop-network
+    depends_on:
+      - app
+
+  # Redis Service
+  redis:
+    image: redis:7-alpine
+    container_name: gloshop_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - gloshop-network
+
+networks:
+  gloshop-network:
+    driver: bridge
+
+volumes:
+  redisdata:
+    driver: local
