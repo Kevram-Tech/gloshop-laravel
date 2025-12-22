@@ -148,5 +148,142 @@ class AuthController extends Controller
             'message' => 'Mot de passe modifié avec succès',
         ]);
     }
+
+    /**
+     * Authenticate with Google.
+     * Accepts user data from Flutter app after Google Sign-In
+     */
+    public function googleAuth(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'name' => 'required|string|max:255',
+            'provider_id' => 'required|string',
+            'avatar' => 'nullable|string|url',
+        ]);
+
+        try {
+            // Find user by email or provider_id
+            $user = User::where('email', $validated['email'])
+                ->orWhere(function ($query) use ($validated) {
+                    $query->where('provider', 'google')
+                          ->where('provider_id', $validated['provider_id']);
+                })
+                ->first();
+
+            if (!$user) {
+                // Create new user
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'provider' => 'google',
+                    'provider_id' => $validated['provider_id'],
+                    'avatar' => $validated['avatar'] ?? null,
+                    'password' => Hash::make(uniqid()), // Random password for social auth users
+                ]);
+            } else {
+                // Update existing user if needed
+                if (!$user->provider) {
+                    $user->update([
+                        'provider' => 'google',
+                        'provider_id' => $validated['provider_id'],
+                        'avatar' => $validated['avatar'] ?? $user->avatar,
+                    ]);
+                } else {
+                    // Update name and avatar if changed
+                    $user->update([
+                        'name' => $validated['name'],
+                        'avatar' => $validated['avatar'] ?? $user->avatar,
+                    ]);
+                }
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Connexion Google réussie',
+                'data' => [
+                    'user' => $user,
+                    'token' => $token,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'authentification Google: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Authenticate with Facebook.
+     * Accepts user data from Flutter app after Facebook Login
+     */
+    public function facebookAuth(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => 'nullable|email',
+            'name' => 'required|string|max:255',
+            'provider_id' => 'required|string',
+            'avatar' => 'nullable|string|url',
+        ]);
+
+        try {
+            // Generate email if not provided
+            $email = $validated['email'] ?? $validated['provider_id'] . '@facebook.com';
+            
+            // Find user by email or provider_id
+            $user = User::where('email', $email)
+                ->orWhere(function ($query) use ($validated) {
+                    $query->where('provider', 'facebook')
+                          ->where('provider_id', $validated['provider_id']);
+                })
+                ->first();
+
+            if (!$user) {
+                // Create new user
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $email,
+                    'provider' => 'facebook',
+                    'provider_id' => $validated['provider_id'],
+                    'avatar' => $validated['avatar'] ?? null,
+                    'password' => Hash::make(uniqid()), // Random password for social auth users
+                ]);
+            } else {
+                // Update existing user if needed
+                if (!$user->provider) {
+                    $user->update([
+                        'provider' => 'facebook',
+                        'provider_id' => $validated['provider_id'],
+                        'avatar' => $validated['avatar'] ?? $user->avatar,
+                    ]);
+                } else {
+                    // Update name and avatar if changed
+                    $user->update([
+                        'name' => $validated['name'],
+                        'avatar' => $validated['avatar'] ?? $user->avatar,
+                    ]);
+                }
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Connexion Facebook réussie',
+                'data' => [
+                    'user' => $user,
+                    'token' => $token,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'authentification Facebook: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
 }
 

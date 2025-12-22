@@ -50,3 +50,4 @@ install: ## Installation complète (build + up + migrate + seed)
 	docker-compose exec app php artisan migrate --seed
 	docker-compose exec app php artisan storage:link
 
+

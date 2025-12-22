@@ -17,3 +17,4 @@ class PrivacyController extends Controller
     }
 }
 
+
