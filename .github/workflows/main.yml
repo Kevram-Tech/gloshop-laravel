@@ -1,0 +1,122 @@
+name: Deploy on production mode (pressingelegance.com)
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Build Docker image
+        run: |
+          docker build -t pretapp-admin:${{ github.sha }} .
+          docker tag pretapp-admin:${{ github.sha }} pretapp-admin:latest
+          docker save pretapp-admin:latest | gzip > app-image.tar.gz
+
+      - name: 📦 Create deployment archive
+        run: |
+          tar --exclude='.git' \
+              --exclude='.github' \
+              --exclude='node_modules' \
+              --exclude='vendor' \
+              --exclude='.env' \
+              --exclude='docker.env' \
+              --exclude='storage/logs' \
+              --exclude='storage/framework/cache' \
+              --exclude='storage/framework/sessions' \
+              --exclude='storage/framework/views' \
+              --exclude='bootstrap/cache' \
+              --exclude='tests' \
+              --exclude='.phpunit.cache' \
+              --exclude='certbot_data' \
+              --exclude='certbot_www' \
+              --exclude='deploy.tar.gz' \
+              --exclude='app-image.tar.gz' \
+              --exclude='*.log' \
+              -czf /tmp/deploy.tar.gz .
+          mv /tmp/deploy.tar.gz ./deploy.tar.gz
+
+      - name: 📤 Upload files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: ${{ secrets.SFTP_PORT || 22 }}
+          source: "deploy.tar.gz,app-image.tar.gz"
+          target: ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/pretapp-admin' }}
+
+      - name: 📂 Extract files on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: ${{ secrets.SFTP_PORT || 22 }}
+          script: |
+            cd ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/pretapp-admin' }}
+
+            # Extraire les fichiers
+            echo "📦 Extraction des fichiers..."
+            tar -xzf deploy.tar.gz
+            rm deploy.tar.gz
+
+            # Charger l'image Docker
+            echo "🐳 Chargement de l'image Docker..."
+            docker load < app-image.tar.gz || true
+            rm app-image.tar.gz
+
+            # Vérifier que docker.env existe
+            if [ ! -f docker.env ]; then
+              echo "⚠️  docker.env n'existe pas. Création depuis docker.env.example..."
+              if [ -f docker.env.example ]; then
+                cp docker.env.example docker.env
+                echo "⚠️  ATTENTION: Configurez docker.env avec vos valeurs!"
+              fi
+            fi
+
+            # Vérifier que DB_HOST est configuré
+            if ! grep -q "DB_HOST=host.docker.internal" docker.env 2>/dev/null && ! grep -q "DB_HOST=" docker.env 2>/dev/null; then
+              echo "⚠️  Configuration DB_HOST manquante dans docker.env"
+              echo "   Ajoutez: DB_HOST=host.docker.internal"
+            fi
+
+            # Arrêter les conteneurs existants
+            echo "🛑 Arrêt des conteneurs existants..."
+            docker-compose -f docker-compose.prod.yml down || true
+
+            # Reconstruire et redémarrer les conteneurs
+            echo "🚀 Démarrage des nouveaux conteneurs..."
+            docker-compose -f docker-compose.prod.yml up -d --build
+
+            # Attendre que les services démarrent
+            echo "⏳ Attente du démarrage des services..."
+            sleep 15
+
+            # Vérifier le statut
+            echo "📊 Statut des conteneurs:"
+            docker-compose -f docker-compose.prod.yml ps
+
+            # Nettoyer les anciennes images
+            echo "🧹 Nettoyage des images Docker inutilisées..."
+            docker image prune -f || true
+
+            echo "✅ Déploiement terminé avec succès!"
