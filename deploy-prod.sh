@@ -16,9 +16,13 @@ fi
 
 # Use docker compose (v2) if available, otherwise docker-compose (v1)
 COMPOSE_CMD="docker-compose"
-if docker compose version &> /dev/null; then
+if docker compose version &> /dev/null 2>&1; then
     COMPOSE_CMD="docker compose"
+elif ! command -v docker-compose &> /dev/null; then
+    echo "❌ Error: Neither 'docker compose' nor 'docker-compose' is available."
+    exit 1
 fi
+echo "📦 Using: $COMPOSE_CMD"
 
 # 2. Clean host cache (critical to avoid 500 errors)
 echo "🧹 Cleaning host cache..."
@@ -43,24 +47,35 @@ if [ ! -f docker.env ]; then
 fi
 echo "✅ docker.env found"
 
-# 4. Stop existing container
+# 4. Create external networks if they don't exist
+echo "🌐 Checking external networks..."
+if ! docker network ls | grep -q "my_dbs_dbnet"; then
+    echo "   Creating my_dbs_dbnet network..."
+    docker network create my_dbs_dbnet 2>/dev/null || true
+fi
+if ! docker network ls | grep -q "web-gateway"; then
+    echo "   Creating web-gateway network..."
+    docker network create web-gateway 2>/dev/null || true
+fi
+
+# 5. Stop existing container
 echo "🛑 Stopping existing App container..."
 $COMPOSE_CMD -f docker-compose.prod.yml stop app 2>/dev/null || true
 $COMPOSE_CMD -f docker-compose.prod.yml rm -f app 2>/dev/null || true
 
-# 5. Build image (force code update)
+# 6. Build image (force code update)
 echo "🏗️ Building Docker image..."
 $COMPOSE_CMD -f docker-compose.prod.yml build --no-cache app
 
-# 6. Start container
+# 7. Start container
 echo "▶️ Starting App container..."
 $COMPOSE_CMD -f docker-compose.prod.yml up -d app
 
-# 7. Wait for container to be ready
+# 8. Wait for container to be ready
 echo "⏳ Waiting for container to be ready..."
 sleep 10
 
-# 8. Post-deployment: Laravel optimizations
+# 9. Post-deployment: Laravel optimizations
 echo "✨ Finalizing (Cache & Config)..."
 CONTAINER_NAME="gloshop_laravel_app"
 

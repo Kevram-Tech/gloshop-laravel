@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -50,5 +48,7 @@ networks:
     driver: bridge
   my_dbs_dbnet:
     external: true
+    name: my_dbs_dbnet
   web-gateway:
     external: true
+    name: web-gateway
