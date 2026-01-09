@@ -11,8 +11,6 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
-    nodejs \
-    npm \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -30,12 +28,6 @@ COPY composer.json composer.lock ./
 
 # Install PHP dependencies (production only)
 RUN composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
-
-# Copy package files for Node.js
-COPY package.json package-lock.json* vite.config.js ./
-
-# Install Node.js dependencies and build assets
-RUN npm ci && npm run build && rm -rf node_modules && npm cache clean --force
 
 # Copy application files
 COPY . .
