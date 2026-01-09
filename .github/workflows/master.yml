@@ -1,4 +1,4 @@
-name: Deploy on production mode (pressingelegance.com)
+name: Deploy GloShop Laravel API to Production
 
 on:
   push:
@@ -46,7 +46,7 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: ${{ secrets.SFTP_PORT || 22 }}
           source: "deploy.tar.gz" # On n'envoie QUE le code (léger)
-          target: ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/pretapp-admin' }}
+          target: ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/gloshop-laravel' }}
           timeout: "120s" # Augmentation du timeout au cas où
 
       - name: 📂 Extract and Build on server
@@ -59,7 +59,7 @@ jobs:
           timeout: "300s" # Timeout plus long pour le build
           command_timeout: "30m" # Le build peut prendre du temps
           script: |
-            cd ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/pretapp-admin' }}
+            cd ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/gloshop-laravel' }}
             
             # Extraction du code
             echo "📦 Extraction des fichiers..."
