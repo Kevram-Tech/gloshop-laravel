@@ -1,24 +1,66 @@
+# Git
 .git
 .gitignore
-.env
-.env.backup
-.phpunit.result.cache
-docker-compose.yml
+.gitattributes
+
+# Docker
 Dockerfile
+docker-compose*.yml
 .dockerignore
-node_modules
-npm-debug.log
-README.md
-README_API.md
-vendor
-storage/logs/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
-bootstrap/cache/*
-.DS_Store
-Thumbs.db
+
+# Documentation
+README*.md
+*.md
+
+# IDE
 .idea
 .vscode
+*.swp
+*.swo
+*~
 
+# OS
+.DS_Store
+Thumbs.db
 
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Laravel
+.env
+.env.*
+!.env.example
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+storage/*
+!storage/.gitignore
+!storage/app
+!storage/app/.gitignore
+!storage/app/public
+!storage/app/public/.gitignore
+!storage/framework
+!storage/framework/.gitignore
+!storage/framework/cache
+!storage/framework/cache/.gitignore
+!storage/framework/sessions
+!storage/framework/sessions/.gitignore
+!storage/framework/views
+!storage/framework/views/.gitignore
+!storage/logs
+!storage/logs/.gitignore
+
+# Testing
+.phpunit.result.cache
+tests
+phpunit.xml
+
+# Build
+build
+dist
+*.log
+
+# Deployment
+deploy*.sh
+Makefile

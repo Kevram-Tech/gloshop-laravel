@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gloshop_laravel_app
+    restart: unless-stopped
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    env_file:
+      - docker.env
+    
+    volumes:
+      # Persist storage and cache directories
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+      # Mount Apache config for easy updates
+      - ./docker/apache/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
+    
+    networks:
+      - gloshop_network
+      - my_dbs_dbnet
+      - web-gateway
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  gloshop_network:
+    driver: bridge
+  my_dbs_dbnet:
+    external: true
+  web-gateway:
+    external: true
