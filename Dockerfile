@@ -24,11 +24,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy PHP configuration
 COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
 
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
 

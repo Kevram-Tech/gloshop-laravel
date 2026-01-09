@@ -166,11 +166,42 @@ jobs:
               exit 1
             fi
             
-            # 13. Générer la clé d'application si nécessaire
+            # 13. S'assurer que .env existe dans le conteneur (copie de docker.env)
+            echo "📋 Configuration du fichier .env..."
+            docker exec $CONTAINER_NAME bash -c "if [ ! -f .env ] && [ -f docker.env ]; then cp docker.env .env; fi" || true
+            
+            # 14. Générer la clé d'application si nécessaire
             echo "🔑 Génération de la clé d'application..."
-            docker exec $CONTAINER_NAME php artisan key:generate --force || {
-              echo "⚠️  La clé existe déjà ou erreur lors de la génération"
-            }
+            # Vérifier si APP_KEY est vide ou manquante dans docker.env
+            if ! grep -q "APP_KEY=base64:" docker.env 2>/dev/null || grep -q "^APP_KEY=$" docker.env; then
+              echo "Génération de la clé d'application..."
+              # Copier docker.env vers .env dans le conteneur
+              docker exec $CONTAINER_NAME bash -c "cp docker.env .env" || true
+              # Générer la clé (elle sera écrite dans .env)
+              docker exec $CONTAINER_NAME php artisan key:generate --force || true
+              # Extraire la clé générée depuis .env et la mettre dans docker.env
+              APP_KEY=$(docker exec $CONTAINER_NAME bash -c "grep '^APP_KEY=' .env | cut -d '=' -f2-" 2>/dev/null || echo "")
+              if [ ! -z "$APP_KEY" ] && [ "$APP_KEY" != "" ]; then
+                # Mettre à jour docker.env avec la nouvelle clé
+                if grep -q "^APP_KEY=" docker.env; then
+                  sed -i "s|^APP_KEY=.*|APP_KEY=$APP_KEY|" docker.env
+                else
+                  echo "APP_KEY=$APP_KEY" >> docker.env
+                fi
+                echo "✅ Clé d'application générée et sauvegardée dans docker.env"
+                # Copier la clé mise à jour vers .env dans le conteneur
+                docker exec $CONTAINER_NAME bash -c "cp docker.env .env" || true
+              fi
+            else
+              echo "✅ Clé d'application déjà présente dans docker.env"
+              # S'assurer que .env dans le conteneur a la même clé
+              docker exec $CONTAINER_NAME bash -c "cp docker.env .env" || true
+            fi
+            
+            # Redémarrer le conteneur pour charger la nouvelle configuration
+            echo "🔄 Redémarrage du conteneur pour charger la nouvelle configuration..."
+            docker restart $CONTAINER_NAME
+            sleep 5
             
             # 14. Optimisations Laravel
             echo "✨ Optimisation Laravel..."
