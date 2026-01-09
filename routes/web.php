@@ -2,13 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PrivacyController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\StatisticsController;
-use App\Http\Controllers\Admin\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,23 +26,30 @@ Route::get('/', function () {
 
 Route::get('/privacy', [PrivacyController::class, 'index'])->name('privacy');
 
-// Admin Authentication
-Route::prefix('admin')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
-    
-    // Protected Admin Routes
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-        
-        Route::resource('products', ProductController::class)->names('admin.products');
-        Route::resource('categories', CategoryController::class)->names('admin.categories');
-        Route::resource('orders', OrderController::class)->names('admin.orders')->only(['index', 'show', 'update']);
-        Route::resource('users', UserController::class)->names('admin.users')->only(['index', 'show']);
-        Route::get('/statistics', [StatisticsController::class, 'index'])->name('admin.statistics.index');
-        Route::get('/settings', function () {
-            return view('admin.settings');
-        })->name('admin.settings.index');
+// Admin Routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    // Auth routes
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+
+    // Protected admin routes
+    Route::middleware(['auth', 'admin'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Products
+        Route::resource('products', ProductController::class);
+
+        // Categories
+        Route::resource('categories', CategoryController::class);
+
+        // Orders
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+
+        // Users
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
     });
 });

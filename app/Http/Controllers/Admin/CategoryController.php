@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::withCount('products')->latest()->paginate(20);
+        $categories = Category::withCount('products')->orderBy('created_at', 'desc')->paginate(20);
         return view('admin.categories.index', compact('categories'));
     }
 
@@ -25,25 +26,22 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
-
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('categories', 'public');
+            $filename = 'categories/' . time() . '_' . Str::random(10) . '.' . $request->file('image')->getClientOriginalExtension();
+            $request->file('image')->storeAs('public', $filename);
+            $validated['image'] = $filename;
         }
+
+        $validated['slug'] = Str::slug($validated['name']);
 
         Category::create($validated);
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Catégorie créée avec succès');
-    }
-
-    public function show(Category $category)
-    {
-        $category->load('products');
-        return view('admin.categories.show', compact('category'));
+            ->with('success', 'Catégorie créée avec succès.');
     }
 
     public function edit(Category $category)
@@ -56,26 +54,48 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
-
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('categories', 'public');
+            // Delete old image
+            if ($category->image) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $filename = 'categories/' . time() . '_' . Str::random(10) . '.' . $request->file('image')->getClientOriginalExtension();
+            $request->file('image')->storeAs('public', $filename);
+            $validated['image'] = $filename;
+        } else {
+            // Keep existing image if not uploading new one
+            $validated['image'] = $category->image;
         }
+
+        $validated['slug'] = Str::slug($validated['name']);
 
         $category->update($validated);
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Catégorie mise à jour avec succès');
+            ->with('success', 'Catégorie mise à jour avec succès.');
     }
 
     public function destroy(Category $category)
     {
+        // Check if category has products
+        if ($category->products()->count() > 0) {
+            return redirect()->route('admin.categories.index')
+                ->with('error', 'Impossible de supprimer cette catégorie car elle contient des produits.');
+        }
+
+        // Delete image
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
+
         $category->delete();
+
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Catégorie supprimée avec succès');
+            ->with('success', 'Catégorie supprimée avec succès.');
     }
 }
 

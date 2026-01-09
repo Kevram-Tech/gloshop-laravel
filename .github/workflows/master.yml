@@ -1,4 +1,4 @@
-name: Deploy GloShop Laravel API to Production
+name: Deploy GloShop Laravel to Production (Port 6500)
 
 on:
   push:
@@ -7,15 +7,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  web-deploy:
-    name: 🎉 Deploy
+  deploy:
+    name: 🚀 Deploy to VPS
     runs-on: ubuntu-latest
+    
     steps:
-      - name: 🚚 Get latest code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # ÉTAPE SUPPRIMÉE : On ne build plus l'image Docker ici pour éviter d'envoyer un fichier de 1Go
-      
       - name: 📦 Create deployment archive
         run: |
           tar --exclude='.git' \
@@ -24,21 +23,19 @@ jobs:
               --exclude='vendor' \
               --exclude='.env' \
               --exclude='docker.env' \
-              --exclude='storage/logs' \
-              --exclude='storage/framework/cache' \
-              --exclude='storage/framework/sessions' \
-              --exclude='storage/framework/views' \
-              --exclude='bootstrap/cache' \
+              --exclude='storage/logs/*' \
+              --exclude='storage/framework/cache/*' \
+              --exclude='storage/framework/sessions/*' \
+              --exclude='storage/framework/views/*' \
+              --exclude='bootstrap/cache/*' \
               --exclude='tests' \
               --exclude='.phpunit.cache' \
-              --exclude='certbot_data' \
-              --exclude='certbot_www' \
-              --exclude='deploy.tar.gz' \
               --exclude='*.log' \
+              --exclude='deploy.tar.gz' \
               -czf /tmp/deploy.tar.gz .
           mv /tmp/deploy.tar.gz ./deploy.tar.gz
 
-      - name: 📤 Upload source code to server
+      - name: 📤 Upload code to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SFTP_HOST }}
@@ -49,7 +46,7 @@ jobs:
           target: ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/gloshop-laravel' }}
           timeout: "120s" # Augmentation du timeout au cas où
 
-      - name: 📂 Extract and Build on server
+      - name: 🐳 Deploy with Docker on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SFTP_HOST }}
@@ -59,55 +56,130 @@ jobs:
           timeout: "300s" # Timeout plus long pour le build
           command_timeout: "30m" # Le build peut prendre du temps
           script: |
-            cd ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/gloshop-laravel' }}
+            set -e
+            
+            DEPLOY_PATH="${{ secrets.VPS_DEPLOY_PATH || '/var/www/gloshop-laravel' }}"
+            cd $DEPLOY_PATH
+            
+            echo "=========================================="
+            echo "🚀 Déploiement GloShop Laravel (Port 6500)"
+            echo "=========================================="
+            
+            # 1. Sauvegarder docker.env s'il existe
+            if [ -f docker.env ]; then
+              echo "💾 Sauvegarde de docker.env..."
+              cp docker.env docker.env.backup
+            fi
             
             # Extraction du code
             echo "📦 Extraction des fichiers..."
             tar -xzf deploy.tar.gz
             rm deploy.tar.gz
-
-            # Note: On a supprimé 'docker load' car on va construire l'image juste après
-
-            # Vérifier que docker.env existe
-            if [ ! -f docker.env ]; then
+            
+            # 3. Restaurer docker.env si sauvegardé
+            if [ -f docker.env.backup ]; then
+              echo "💾 Restauration de docker.env..."
+              mv docker.env.backup docker.env
+            elif [ ! -f docker.env ] && [ -f docker.env.example ]; then
               echo "⚠️  docker.env n'existe pas. Création depuis docker.env.example..."
-              if [ -f docker.env.example ]; then
-                cp docker.env.example docker.env
-              fi
+              cp docker.env.example docker.env
+              echo "⚠️  IMPORTANT: Configurez docker.env avec vos valeurs réelles!"
             fi
+            
+            # 4. Vérifier que Docker est installé
+            if ! command -v docker &> /dev/null; then
+              echo "❌ Docker n'est pas installé sur le serveur"
+              exit 1
+            fi
+            
+            # 5. Détecter docker-compose ou docker compose
+            if docker compose version &> /dev/null; then
+              COMPOSE_CMD="docker compose"
+            elif command -v docker-compose &> /dev/null; then
+              COMPOSE_CMD="docker-compose"
+            else
+              echo "❌ Docker Compose n'est pas installé"
+              exit 1
+            fi
+            
+            echo "✅ Utilisation de: $COMPOSE_CMD"
+            
+            # 6. Nettoyer le cache Laravel
+            echo "🧹 Nettoyage du cache..."
+            rm -f bootstrap/cache/config.php
+            rm -f bootstrap/cache/services.php
+            rm -f bootstrap/cache/packages.php
+            rm -f bootstrap/cache/routes-v7.php
+            rm -f bootstrap/cache/routes.php
+            
+            # 7. Arrêter les conteneurs existants
+            echo "🛑 Arrêt des conteneurs existants..."
+            $COMPOSE_CMD -f docker-compose.prod.yml down 2>/dev/null || true
+            
+            # 8. Construire l'image Docker
+            echo "🏗️ Construction de l'image Docker..."
+            $COMPOSE_CMD -f docker-compose.prod.yml build --no-cache app
+            
+            # 9. Démarrer les conteneurs
+            echo "▶️ Démarrage des conteneurs..."
+            $COMPOSE_CMD -f docker-compose.prod.yml up -d
+            
+            # 10. Attendre que les conteneurs soient prêts
+            echo "⏳ Attente du démarrage des conteneurs..."
+            sleep 20
+            
+            # 11. Vérifier que le conteneur est prêt
+            CONTAINER_NAME="gloshop_laravel_app"
+            MAX_ATTEMPTS=30
+            ATTEMPT=0
+            
+            while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+              if docker exec $CONTAINER_NAME php artisan --version &> /dev/null; then
+                echo "✅ Conteneur prêt"
+                break
+              fi
+              ATTEMPT=$((ATTEMPT + 1))
+              echo "   Attente... ($ATTEMPT/$MAX_ATTEMPTS)"
+              sleep 2
+            done
+            
+            if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+              echo "⚠️  Avertissement: Le conteneur peut ne pas être complètement prêt"
+            fi
+            
+            # 12. Optimisations Laravel
+            echo "✨ Optimisation Laravel..."
+            docker exec $CONTAINER_NAME php artisan config:clear || true
+            docker exec $CONTAINER_NAME php artisan view:clear || true
+            docker exec $CONTAINER_NAME php artisan route:clear || true
+            docker exec $CONTAINER_NAME php artisan cache:clear || true
+            
+            # Cache pour la production
+            docker exec $CONTAINER_NAME php artisan config:cache || true
+            docker exec $CONTAINER_NAME php artisan route:cache || true
+            docker exec $CONTAINER_NAME php artisan view:cache || true
+            
+            # Créer le lien de stockage
+            docker exec $CONTAINER_NAME php artisan storage:link || true
+            
+            # Permissions
+            docker exec $CONTAINER_NAME chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
+            docker exec $CONTAINER_NAME chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
+            
+            # 13. Vérifier le statut
+            echo ""
+            echo "=========================================="
+            echo "✅ Déploiement terminé avec succès!"
+            echo "=========================================="
+            echo "Application accessible sur le port 6500"
+            echo ""
+            echo "Statut des conteneurs:"
+            $COMPOSE_CMD -f docker-compose.prod.yml ps
+            echo ""
+            echo "Dernières lignes des logs:"
+            docker logs --tail 20 $CONTAINER_NAME || true
 
-            # Vérifier et mettre à jour APP_URL avec le port 8082
-            if [ -f docker.env ]; then
-              echo "🔧 Updating APP_URL to use port 8082..."
-              sed -i 's|APP_URL=.*|APP_URL=http://72.60.188.146:8082|g' docker.env || true
-            fi
-            
-            echo "📦 Deployments..."
-            # Utilisation du script de déploiement intelligent qu'on a créé précédemment
-            # Assurez-vous que le script est exécutable
-            chmod +x deploy-prod.sh
-            ./deploy-prod.sh
-            
-            # Vérifier que le port 8082 est ouvert dans le firewall
-            echo "🔥 Checking firewall for port 8082..."
-            if command -v ufw &> /dev/null; then
-              sudo ufw allow 8082/tcp || true
-              echo "✅ Port 8082 opened in UFW"
-            elif command -v firewall-cmd &> /dev/null; then
-              sudo firewall-cmd --permanent --add-port=8082/tcp || true
-              sudo firewall-cmd --reload || true
-              echo "✅ Port 8082 opened in firewalld"
-            fi
-            
-            # Vérifier que le conteneur écoute sur le port 8082
-            echo "🔍 Verifying container is listening on port 8082..."
-            sleep 5
-            if docker ps | grep -q "gloshop_laravel_app"; then
-              PORT_CHECK=$(docker port gloshop_laravel_app 2>&1 | grep "8082" || echo "")
-              if [ -n "$PORT_CHECK" ]; then
-                echo "✅ Container is listening on port 8082: $PORT_CHECK"
-              else
-                echo "⚠️  Warning: Port 8082 mapping not found. Checking container status..."
-                docker ps | grep gloshop_laravel_app
-              fi
-            fi
+      - name: ✅ Deployment Status
+        run: |
+          echo "✅ Déploiement terminé!"
+          echo "🌐 Application accessible sur: http://${{ secrets.SFTP_HOST }}:6500"

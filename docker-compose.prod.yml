@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   app:
     build:
@@ -5,25 +7,20 @@ services:
       dockerfile: Dockerfile
     container_name: gloshop_laravel_app
     restart: unless-stopped
-    
-    ports:
-      - "8082:80"
-      - "443:443"
-    
-    env_file:
-      - docker.env
+    working_dir: /var/www/html
     
     volumes:
       # Persist storage and cache directories
       - ./storage:/var/www/html/storage
       - ./bootstrap/cache:/var/www/html/bootstrap/cache
-      # Mount Apache config for easy updates
-      - ./docker/apache/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
+      # Mount code (read-only for production, or full for development)
+      - ./:/var/www/html
+    
+    env_file:
+      - docker.env
     
     networks:
       - gloshop_network
-      - my_dbs_dbnet
-      - web-gateway
     
     # Resource limits for production
     deploy:
@@ -35,20 +32,37 @@ services:
           cpus: '0.5'
           memory: 512M
     
-    # Health check
+    # Health check - vérifie que PHP fonctionne
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD-SHELL", "php -r 'exit(0);' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+  nginx:
+    image: nginx:alpine
+    container_name: gloshop_laravel_nginx
+    restart: unless-stopped
+    ports:
+      - "6500:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - gloshop_network
+    depends_on:
+      - app
+    
+    # Health check - vérifie que Nginx répond
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
 networks:
   gloshop_network:
     driver: bridge
-  my_dbs_dbnet:
-    external: true
-    name: my_dbs_dbnet
-  web-gateway:
-    external: true
-    name: web-gateway
+
