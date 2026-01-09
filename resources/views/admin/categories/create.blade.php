@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Nouvelle Catégorie - Admin')
-@section('page-title', 'Créer une Catégorie')
+@section('page-title', 'NOUVELLE CATÉGORIE')
+@section('page-subtitle', 'CRÉATION')
 
 @section('content')
 <div class="bg-white rounded-lg shadow p-6">

@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Modifier Produit - Admin')
-@section('page-title', 'Modifier le Produit')
+@section('page-title', 'MODIFIER PRODUIT')
+@section('page-subtitle', 'ÉDITION')
 
 @section('content')
 <div class="bg-white rounded-lg shadow p-6">

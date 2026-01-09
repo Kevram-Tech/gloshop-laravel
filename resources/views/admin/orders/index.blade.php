@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Commandes - Admin')
-@section('page-title', 'Gestion des Commandes')
+@section('page-title', 'COMMANDES')
+@section('page-subtitle', 'GESTION')
 
 @section('content')
 <div class="mb-4">

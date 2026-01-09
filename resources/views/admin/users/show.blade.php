@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Détails Utilisateur - Admin')
-@section('page-title', 'Détails de l\'Utilisateur')
+@section('page-title', 'UTILISATEUR')
+@section('page-subtitle', 'DÉTAILS')
 
 @section('content')
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

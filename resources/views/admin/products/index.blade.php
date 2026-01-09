@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Produits - Admin')
-@section('page-title', 'Gestion des Produits')
+@section('page-title', 'PRODUITS')
+@section('page-subtitle', 'GESTION')
 
 @section('content')
 <div class="mb-4 flex justify-between items-center">

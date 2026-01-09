@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Utilisateurs - Admin')
-@section('page-title', 'Gestion des Utilisateurs')
+@section('page-title', 'UTILISATEURS')
+@section('page-subtitle', 'GESTION')
 
 @section('content')
 <div class="mb-4">

@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Catégories - Admin')
-@section('page-title', 'Gestion des Catégories')
+@section('page-title', 'CATÉGORIES')
+@section('page-subtitle', 'GESTION')
 
 @section('content')
 <div class="mb-4">

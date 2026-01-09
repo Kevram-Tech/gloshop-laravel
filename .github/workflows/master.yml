@@ -147,7 +147,26 @@ jobs:
               echo "⚠️  Avertissement: Le conteneur peut ne pas être complètement prêt"
             fi
             
-            # 12. Optimisations Laravel
+            # 12. Installer les dépendances Composer
+            echo "📦 Installation des dépendances Composer..."
+            # Vérifier que composer.json existe
+            if docker exec $CONTAINER_NAME test -f composer.json; then
+              echo "✅ composer.json trouvé"
+              # Installer les dépendances
+              docker exec $CONTAINER_NAME composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || {
+                echo "⚠️  Erreur lors de l'installation, tentative avec --ignore-platform-reqs..."
+                docker exec $CONTAINER_NAME composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs || {
+                  echo "❌ Échec de l'installation des dépendances Composer"
+                  exit 1
+                }
+              }
+              echo "✅ Dépendances Composer installées"
+            else
+              echo "❌ composer.json introuvable!"
+              exit 1
+            fi
+            
+            # 13. Optimisations Laravel
             echo "✨ Optimisation Laravel..."
             docker exec $CONTAINER_NAME php artisan config:clear || true
             docker exec $CONTAINER_NAME php artisan view:clear || true
@@ -166,7 +185,7 @@ jobs:
             docker exec $CONTAINER_NAME chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
             docker exec $CONTAINER_NAME chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
             
-            # 13. Vérifier le statut
+            # 14. Vérifier le statut
             echo ""
             echo "=========================================="
             echo "✅ Déploiement terminé avec succès!"

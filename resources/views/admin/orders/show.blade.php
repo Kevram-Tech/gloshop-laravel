@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Détails Commande - Admin')
-@section('page-title', 'Détails de la Commande #' . $order->order_number)
+@section('page-title', 'COMMANDE #' . $order->order_number)
+@section('page-subtitle', 'DÉTAILS')
 
 @section('content')
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
