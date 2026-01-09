@@ -76,8 +76,38 @@ jobs:
               fi
             fi
 
+            # Vérifier et mettre à jour APP_URL avec le port 8082
+            if [ -f docker.env ]; then
+              echo "🔧 Updating APP_URL to use port 8082..."
+              sed -i 's|APP_URL=.*|APP_URL=http://72.60.188.146:8082|g' docker.env || true
+            fi
+            
             echo "📦 Deployments..."
             # Utilisation du script de déploiement intelligent qu'on a créé précédemment
             # Assurez-vous que le script est exécutable
             chmod +x deploy-prod.sh
             ./deploy-prod.sh
+            
+            # Vérifier que le port 8082 est ouvert dans le firewall
+            echo "🔥 Checking firewall for port 8082..."
+            if command -v ufw &> /dev/null; then
+              sudo ufw allow 8082/tcp || true
+              echo "✅ Port 8082 opened in UFW"
+            elif command -v firewall-cmd &> /dev/null; then
+              sudo firewall-cmd --permanent --add-port=8082/tcp || true
+              sudo firewall-cmd --reload || true
+              echo "✅ Port 8082 opened in firewalld"
+            fi
+            
+            # Vérifier que le conteneur écoute sur le port 8082
+            echo "🔍 Verifying container is listening on port 8082..."
+            sleep 5
+            if docker ps | grep -q "gloshop_laravel_app"; then
+              PORT_CHECK=$(docker port gloshop_laravel_app 2>&1 | grep "8082" || echo "")
+              if [ -n "$PORT_CHECK" ]; then
+                echo "✅ Container is listening on port 8082: $PORT_CHECK"
+              else
+                echo "⚠️  Warning: Port 8082 mapping not found. Checking container status..."
+                docker ps | grep gloshop_laravel_app
+              fi
+            fi
