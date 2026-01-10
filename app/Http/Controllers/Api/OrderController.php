@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -50,10 +51,38 @@ class OrderController extends Controller
             ->get();
 
         if ($cartItems->isEmpty()) {
+            Log::warning('Order creation failed: Empty cart', [
+                'user_id' => Auth::id(),
+                'cart_count' => Cart::where('user_id', Auth::id())->count(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Votre panier est vide',
             ], 400);
+        }
+
+        // Vérifier que tous les produits existent et sont actifs
+        $invalidItems = $cartItems->filter(function ($item) {
+            return !$item->product || !$item->product->is_active;
+        });
+
+        if ($invalidItems->isNotEmpty()) {
+            // Supprimer les produits invalides du panier
+            $invalidItems->each(function ($item) {
+                $item->delete();
+            });
+            
+            // Recharger le panier après suppression
+            $cartItems = Cart::where('user_id', Auth::id())
+                ->with('product')
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Certains produits ne sont plus disponibles. Votre panier a été mis à jour.',
+                ], 400);
+            }
         }
 
         DB::beginTransaction();
