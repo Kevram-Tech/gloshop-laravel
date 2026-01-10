@@ -94,48 +94,64 @@ jobs:
             rm -f deploy.tar.gz
             echo "✅ Fichiers extraits"
             
-            # 3. Gérer .env
+            # 3. Gérer .env - Préserver l'existant ou créer depuis .env.example
             if [ -f .env.backup ]; then
               echo "💾 Restauration de .env depuis la sauvegarde..."
               mv .env.backup .env
               echo "✅ .env restauré depuis la sauvegarde"
             elif [ -f .env ]; then
-              echo "✅ .env existe déjà"
+              echo "✅ .env existe déjà - préservation des valeurs existantes"
+              # Vérifier que APP_KEY existe, sinon on la générera plus tard
+              if ! grep -q "APP_KEY=base64:" .env 2>/dev/null; then
+                echo "⚠️  APP_KEY manquante dans .env existant (sera générée plus tard)"
+              fi
             elif [ -f .env.example ]; then
               echo "⚠️  .env n'existe pas. Création depuis .env.example..."
               cp .env.example .env
-              echo "✅ .env créé depuis .env.example"
-              echo "⚠️  IMPORTANT: Vérifiez que .env contient les bonnes valeurs!"
+              
+              # Adapter les valeurs pour Docker
+              echo "🔧 Adaptation des valeurs pour Docker..."
+              # DB_HOST pour Docker
+              if grep -q "^DB_HOST=" .env; then
+                sed -i 's/^DB_HOST=.*/DB_HOST=host.docker.internal/' .env || \
+                sed -i.bak 's/^DB_HOST=.*/DB_HOST=host.docker.internal/' .env || true
+              fi
+              
+              # REDIS_HOST pour Docker
+              if grep -q "^REDIS_HOST=" .env; then
+                sed -i 's/^REDIS_HOST=.*/REDIS_HOST=redis/' .env || \
+                sed -i.bak 's/^REDIS_HOST=.*/REDIS_HOST=redis/' .env || true
+              fi
+              
+              # CACHE_DRIVER pour Redis en production
+              if grep -q "^CACHE_DRIVER=" .env; then
+                sed -i 's/^CACHE_DRIVER=.*/CACHE_DRIVER=redis/' .env || \
+                sed -i.bak 's/^CACHE_DRIVER=.*/CACHE_DRIVER=redis/' .env || true
+              fi
+              
+              # SESSION_DRIVER pour Redis
+              if grep -q "^SESSION_DRIVER=" .env; then
+                sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=redis/' .env || \
+                sed -i.bak 's/^SESSION_DRIVER=.*/SESSION_DRIVER=redis/' .env || true
+              fi
+              
+              # QUEUE_CONNECTION pour Redis
+              if grep -q "^QUEUE_CONNECTION=" .env; then
+                sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=redis/' .env || \
+                sed -i.bak 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=redis/' .env || true
+              fi
+              
+              # Nettoyer les fichiers de backup sed si créés
+              rm -f .env.bak
+              
+              echo "✅ .env créé depuis .env.example avec adaptations Docker"
+              echo "⚠️  IMPORTANT: Vérifiez que .env contient les bonnes valeurs (DB_PASSWORD, etc.)!"
             else
-              echo "⚠️  .env et .env.example n'existent pas. Création d'un .env minimal..."
-              echo "APP_NAME=GloShop" > .env
-              echo "APP_ENV=production" >> .env
-              echo "APP_KEY=" >> .env
-              echo "APP_DEBUG=false" >> .env
-              echo "APP_URL=http://localhost:6500" >> .env
-              echo "" >> .env
-              echo "LOG_CHANNEL=stack" >> .env
-              echo "LOG_LEVEL=error" >> .env
-              echo "" >> .env
-              echo "DB_CONNECTION=mysql" >> .env
-              echo "DB_HOST=host.docker.internal" >> .env
-              echo "DB_PORT=3306" >> .env
-              echo "DB_DATABASE=gloshop" >> .env
-              echo "DB_USERNAME=gloshop" >> .env
-              echo "DB_PASSWORD=" >> .env
-              echo "" >> .env
-              echo "BROADCAST_DRIVER=log" >> .env
-              echo "CACHE_DRIVER=redis" >> .env
-              echo "FILESYSTEM_DISK=local" >> .env
-              echo "QUEUE_CONNECTION=redis" >> .env
-              echo "SESSION_DRIVER=redis" >> .env
-              echo "SESSION_LIFETIME=120" >> .env
-              echo "" >> .env
-              echo "REDIS_HOST=redis" >> .env
-              echo "REDIS_PASSWORD=null" >> .env
-              echo "REDIS_PORT=6379" >> .env
+              echo "❌ ERREUR: .env.example n'existe pas et .env n'existe pas non plus!"
+              echo "Création d'un .env minimal d'urgence..."
+              printf "APP_NAME=GloShop\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=http://localhost:6500\n\nLOG_CHANNEL=stack\nLOG_LEVEL=error\n\nDB_CONNECTION=mysql\nDB_HOST=host.docker.internal\nDB_PORT=3306\nDB_DATABASE=gloshop\nDB_USERNAME=gloshop\nDB_PASSWORD=\n\nBROADCAST_DRIVER=log\nCACHE_DRIVER=redis\nFILESYSTEM_DISK=local\nQUEUE_CONNECTION=redis\nSESSION_DRIVER=redis\nSESSION_LIFETIME=120\n\nREDIS_HOST=redis\nREDIS_PASSWORD=null\nREDIS_PORT=6379\n" > .env
               echo "✅ .env minimal créé"
-              echo "⚠️  IMPORTANT: Configurez .env avec vos valeurs réelles!"
+              echo "⚠️  URGENT: Configurez .env avec toutes les valeurs nécessaires!"
             fi
             
             # Vérifier que .env existe maintenant
@@ -145,6 +161,8 @@ jobs:
             fi
             
             echo "✅ .env présent: $(ls -lh .env | awk '{print $5, $9}')"
+            echo "📋 Variables importantes dans .env:"
+            grep -E "^(APP_KEY|DB_|REDIS_|CACHE_DRIVER|SESSION_DRIVER)" .env | head -10 || echo "Variables non trouvées"
             
             # 4. Vérifier que Docker est installé
             if ! command -v docker &> /dev/null; then
