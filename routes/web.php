@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\PromoCodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,5 +53,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Users
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+
+        // Promotions
+        Route::resource('promotions', PromotionController::class);
+
+        // Promo Codes
+        Route::resource('promo-codes', PromoCodeController::class);
     });
 });

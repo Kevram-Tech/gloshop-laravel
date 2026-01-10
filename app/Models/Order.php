@@ -13,7 +13,10 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'promo_code_id',
         'order_number',
+        'subtotal_amount',
+        'discount_amount',
         'total_amount',
         'status',
         'payment_status',
@@ -23,6 +26,12 @@ class Order extends Model
         'shipping_phone',
         'shipping_email',
         'notes',
+    ];
+
+    protected $casts = [
+        'subtotal_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 
     protected static function boot()
@@ -58,6 +67,14 @@ class Order extends Model
     public function paymentTransactions()
     {
         return $this->hasMany(PaymentTransaction::class);
+    }
+
+    /**
+     * Get the promo code used for this order.
+     */
+    public function promoCode()
+    {
+        return $this->belongsTo(PromoCode::class);
     }
 }
 

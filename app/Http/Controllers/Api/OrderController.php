@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\PromoCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +42,7 @@ class OrderController extends Controller
             'shipping_email' => 'nullable|email',
             'payment_method' => 'required|string',
             'notes' => 'nullable|string',
+            'promo_code' => 'nullable|string',
         ]);
 
         $cartItems = Cart::where('user_id', Auth::id())
@@ -56,14 +58,33 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
-            // Calculate total
-            $totalAmount = $cartItems->sum(function ($item) {
+            // Calculate subtotal
+            $subtotalAmount = $cartItems->sum(function ($item) {
                 return $item->total;
             });
+
+            // Apply promo code if provided
+            $promoCode = null;
+            $discountAmount = 0;
+            
+            if (!empty($validated['promo_code'])) {
+                $promoCode = PromoCode::where('code', strtoupper($validated['promo_code']))->first();
+                
+                if ($promoCode && $promoCode->isValid() && $promoCode->canBeUsedBy(Auth::id())) {
+                    if ($subtotalAmount >= ($promoCode->min_purchase_amount ?? 0)) {
+                        $discountAmount = $promoCode->calculateDiscount($subtotalAmount);
+                    }
+                }
+            }
+
+            $totalAmount = $subtotalAmount - $discountAmount;
 
             // Create order
             $order = Order::create([
                 'user_id' => Auth::id(),
+                'promo_code_id' => $promoCode?->id,
+                'subtotal_amount' => $subtotalAmount,
+                'discount_amount' => $discountAmount,
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
                 'payment_status' => 'pending',
@@ -74,6 +95,11 @@ class OrderController extends Controller
                 'shipping_email' => $validated['shipping_email'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
+
+            // Increment promo code usage if used
+            if ($promoCode && $discountAmount > 0) {
+                $promoCode->incrementUsage(Auth::id(), $order->id, $discountAmount);
+            }
 
             // Create order items and update stock
             foreach ($cartItems as $cartItem) {

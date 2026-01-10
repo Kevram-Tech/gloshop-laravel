@@ -73,6 +73,16 @@
                     <i class="fas fa-users w-4 mr-2"></i>
                     <span>UTILISATEURS</span>
                 </a>
+                
+                <a href="{{ route('admin.promotions.index') }}" class="flex items-center px-3 py-2 text-xs font-medium {{ request()->routeIs('admin.promotions.*') ? 'bg-gray-900 text-white border-l-2 border-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    <i class="fas fa-percent w-4 mr-2"></i>
+                    <span>PROMOTIONS</span>
+                </a>
+                
+                <a href="{{ route('admin.promo-codes.index') }}" class="flex items-center px-3 py-2 text-xs font-medium {{ request()->routeIs('admin.promo-codes.*') ? 'bg-gray-900 text-white border-l-2 border-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    <i class="fas fa-ticket-alt w-4 mr-2"></i>
+                    <span>CODES PROMOS</span>
+                </a>
             </nav>
             
             <!-- Footer -->

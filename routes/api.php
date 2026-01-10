@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\FavoritesController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PromotionController;
+use App\Http\Controllers\Api\PromoCodeController;
 use App\Http\Controllers\Api\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +38,8 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{slug}', [CategoryController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
+Route::get('/promotions', [PromotionController::class, 'index']);
+Route::get('/promotions/{id}', [PromotionController::class, 'show']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -86,6 +90,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/paygate/initiate', [PaymentController::class, 'initiatePayGate']);
         Route::post('/paygate/check-status', [PaymentController::class, 'checkPaymentStatus']);
         Route::post('/card/process', [PaymentController::class, 'processCardPayment']);
+    });
+
+    Route::prefix('promo-codes')->group(function () {
+        Route::post('/validate', [PromoCodeController::class, 'validate']);
+        Route::get('/available', [PromoCodeController::class, 'available']);
     });
 });
 
