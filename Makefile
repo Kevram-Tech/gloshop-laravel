@@ -1,54 +1,46 @@
-.PHONY: help build-prod up-prod down-prod restart-prod logs-prod shell-prod deploy-prod
-
-# Use docker compose (v2) if available, otherwise docker-compose (v1)
-COMPOSE_CMD := $(shell if docker compose version &> /dev/null; then echo "docker compose"; else echo "docker-compose"; fi)
+.PHONY: help install migrate seed fresh test cache-clear storage-link
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-build-prod: ## Construire les images Docker (production)
-	$(COMPOSE_CMD) -f docker-compose.prod.yml build
+install: ## Installer les dépendances Composer
+	composer install --no-dev --optimize-autoloader
 
-up-prod: ## Démarrer les conteneurs (production)
-	$(COMPOSE_CMD) -f docker-compose.prod.yml up -d
+update: ## Mettre à jour les dépendances Composer
+	composer update --no-dev --optimize-autoloader
 
-down-prod: ## Arrêter les conteneurs (production)
-	$(COMPOSE_CMD) -f docker-compose.prod.yml down
+migrate: ## Exécuter les migrations
+	php artisan migrate
 
-restart-prod: ## Redémarrer les conteneurs (production)
-	$(COMPOSE_CMD) -f docker-compose.prod.yml restart
+seed: ## Exécuter les seeders
+	php artisan db:seed
 
-logs-prod: ## Voir les logs (production)
-	$(COMPOSE_CMD) -f docker-compose.prod.yml logs -f
+fresh: ## Réinitialiser la base de données
+	php artisan migrate:fresh --seed
 
-shell-prod: ## Accéder au shell du conteneur app (production)
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app bash
+test: ## Exécuter les tests
+	php artisan test
 
-deploy-prod: ## Déployer en production (build + up + optimize)
-	@echo "🚀 Déploiement en production..."
-	@if [ ! -f docker.env ]; then \
-		echo "⚠️  docker.env n'existe pas. Création depuis docker.env.example..."; \
-		cp docker.env.example docker.env; \
-		echo "✅ docker.env créé. ⚠️  IMPORTANT: Éditez docker.env avec vos valeurs avant de continuer!"; \
-		exit 1; \
-	fi
-	$(COMPOSE_CMD) -f docker-compose.prod.yml build --no-cache app
-	$(COMPOSE_CMD) -f docker-compose.prod.yml up -d
-	@echo "⏳ Attente du démarrage..."
-	sleep 15
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan config:cache
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan route:cache
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan view:cache
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan storage:link || true
-	@echo "✅ Déploiement terminé! Application accessible sur le port 6500"
+cache-clear: ## Vider tous les caches
+	php artisan cache:clear
+	php artisan config:clear
+	php artisan route:clear
+	php artisan view:clear
 
-cache-clear-prod: ## Vider tous les caches (production)
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan cache:clear
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan config:clear
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan route:clear
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan view:clear
+cache-optimize: ## Optimiser les caches pour la production
+	php artisan config:cache
+	php artisan route:cache
+	php artisan view:cache
 
-cache-optimize-prod: ## Optimiser les caches pour la production
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan config:cache
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan route:cache
-	$(COMPOSE_CMD) -f docker-compose.prod.yml exec app php artisan view:cache
+storage-link: ## Créer le lien de stockage
+	php artisan storage:link
+
+key-generate: ## Générer la clé d'application
+	php artisan key:generate
+
+optimize: ## Optimisation complète (cache + autoload)
+	composer install --no-dev --optimize-autoloader
+	php artisan config:cache
+	php artisan route:cache
+	php artisan view:cache
+	php artisan storage:link

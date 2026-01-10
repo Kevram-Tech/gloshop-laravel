@@ -7,6 +7,30 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## GloShop Laravel API
+
+Application e-commerce Laravel avec API REST et backoffice d'administration.
+
+### Déploiement
+
+Le déploiement se fait automatiquement via GitHub Actions à chaque push sur la branche `master`.
+
+### Configuration
+
+1. Copier `.env.example` vers `.env`
+2. Configurer les variables d'environnement
+3. Installer les dépendances : `composer install`
+4. Générer la clé : `php artisan key:generate`
+5. Exécuter les migrations : `php artisan migrate --seed`
+
+### Cron (Scheduler Laravel)
+
+Ajoutez cette ligne au crontab pour exécuter les tâches planifiées :
+
+```bash
+* * * * * cd /var/www/gloshop-laravel && php artisan schedule:run >> /dev/null 2>&1
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
