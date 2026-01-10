@@ -22,6 +22,7 @@ jobs:
               --exclude='node_modules' \
               --exclude='vendor' \
               --exclude='.env' \
+              --exclude='.env.*' \
               --exclude='storage/logs/*' \
               --exclude='storage/framework/cache/*' \
               --exclude='storage/framework/sessions/*' \
@@ -31,8 +32,12 @@ jobs:
               --exclude='.phpunit.cache' \
               --exclude='*.log' \
               --exclude='deploy.tar.gz' \
+              --exclude='start-local.ps1' \
+              --exclude='DOCKER_SETUP.md' \
+              --exclude='.env.docker.example' \
               -czf /tmp/deploy.tar.gz .
           mv /tmp/deploy.tar.gz ./deploy.tar.gz
+          ls -lh deploy.tar.gz
 
       - name: 📤 Upload code to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -44,6 +49,7 @@ jobs:
           source: "deploy.tar.gz"
           target: ${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/gloshop-laravel' }}
           timeout: "300s"
+          strip_components: 0
 
       - name: 🚀 Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -58,6 +64,14 @@ jobs:
             set -e
             
             DEPLOY_PATH="${{ secrets.SFTP_ADMIN_DEPLOY_PATH || '/var/www/gloshop-laravel' }}"
+            
+            # Créer le répertoire s'il n'existe pas
+            if [ ! -d "$DEPLOY_PATH" ]; then
+              echo "📁 Création du répertoire de déploiement..."
+              sudo mkdir -p $DEPLOY_PATH
+              sudo chown -R $USER:$USER $DEPLOY_PATH || true
+            fi
+            
             cd $DEPLOY_PATH
             
             echo "=========================================="
@@ -72,8 +86,13 @@ jobs:
             
             # 2. Extraction du code
             echo "📦 Extraction des fichiers..."
+            if [ ! -f deploy.tar.gz ]; then
+              echo "❌ Fichier deploy.tar.gz introuvable!"
+              exit 1
+            fi
             tar -xzf deploy.tar.gz
-            rm deploy.tar.gz
+            rm -f deploy.tar.gz
+            echo "✅ Fichiers extraits"
             
             # 3. Restaurer .env si sauvegardé
             if [ -f .env.backup ]; then
@@ -85,24 +104,31 @@ jobs:
               echo "⚠️  IMPORTANT: Configurez .env avec vos valeurs réelles!"
             fi
             
-            # 4. Vérifier que PHP est installé
-            if ! command -v php &> /dev/null; then
-              echo "❌ PHP n'est pas installé sur le serveur"
+            # 4. Vérifier que Docker est installé
+            if ! command -v docker &> /dev/null; then
+              echo "❌ Docker n'est pas installé sur le serveur"
               exit 1
             fi
             
-            PHP_VERSION=$(php -r 'echo PHP_VERSION;')
-            echo "✅ PHP version: $PHP_VERSION"
+            echo "✅ Docker installé: $(docker --version)"
             
-            # 5. Vérifier que Composer est installé
-            if ! command -v composer &> /dev/null; then
-              echo "❌ Composer n'est pas installé sur le serveur"
+            # 5. Vérifier que Docker Compose est disponible
+            if docker compose version &> /dev/null; then
+              COMPOSE_CMD="docker compose"
+              echo "✅ Docker Compose v2 disponible"
+            elif docker-compose version &> /dev/null; then
+              COMPOSE_CMD="docker-compose"
+              echo "✅ Docker Compose v1 disponible"
+            else
+              echo "❌ Docker Compose n'est pas installé"
               exit 1
             fi
             
-            echo "✅ Composer installé"
+            # 6. Arrêter les conteneurs existants
+            echo "🛑 Arrêt des conteneurs existants..."
+            $COMPOSE_CMD down || true
             
-            # 6. Nettoyer le cache Laravel
+            # 7. Nettoyer le cache Laravel
             echo "🧹 Nettoyage du cache..."
             rm -f bootstrap/cache/config.php
             rm -f bootstrap/cache/services.php
@@ -110,72 +136,103 @@ jobs:
             rm -f bootstrap/cache/routes-v7.php
             rm -f bootstrap/cache/routes.php
             
-            # 7. Installer les dépendances Composer
+            # 8. Configurer les permissions
+            echo "🔐 Configuration des permissions..."
+            mkdir -p storage/app/public
+            mkdir -p storage/framework/cache/data
+            mkdir -p storage/framework/sessions
+            mkdir -p storage/framework/views
+            mkdir -p storage/logs
+            mkdir -p bootstrap/cache
+            
+            # 9. Construire les images Docker
+            echo "🔨 Construction des images Docker..."
+            $COMPOSE_CMD build --no-cache
+            
+            # 10. Démarrer les conteneurs
+            echo "🚀 Démarrage des conteneurs..."
+            $COMPOSE_CMD up -d
+            
+            # 11. Attendre que les conteneurs soient prêts
+            echo "⏳ Attente que les conteneurs soient prêts..."
+            sleep 10
+            
+            # 12. Installer les dépendances Composer dans le conteneur
             echo "📦 Installation des dépendances Composer..."
-            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || {
+            $COMPOSE_CMD exec -T app composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || {
               echo "⚠️  Tentative avec --ignore-platform-reqs..."
-              composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
+              $COMPOSE_CMD exec -T app composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
             }
             
-            # 8. Générer la clé d'application si nécessaire
+            # 13. Générer la clé d'application si nécessaire
             echo "🔑 Génération de la clé d'application..."
             if ! grep -q "APP_KEY=base64:" .env 2>/dev/null || grep -q "^APP_KEY=$" .env; then
-              php artisan key:generate --force || true
+              $COMPOSE_CMD exec -T app php artisan key:generate --force || true
               echo "✅ Clé d'application générée"
             else
               echo "✅ Clé d'application déjà présente"
             fi
             
-            # 9. Configurer les permissions
-            echo "🔐 Configuration des permissions..."
-            chown -R www-data:www-data storage bootstrap/cache || true
-            chmod -R 775 storage bootstrap/cache || true
-            
-            # 10. Optimisations Laravel
+            # 14. Optimisations Laravel dans le conteneur
             echo "✨ Optimisation Laravel..."
-            php artisan config:clear || true
-            php artisan view:clear || true
-            php artisan route:clear || true
-            php artisan cache:clear || true
+            $COMPOSE_CMD exec -T app php artisan config:clear || true
+            $COMPOSE_CMD exec -T app php artisan view:clear || true
+            $COMPOSE_CMD exec -T app php artisan route:clear || true
+            $COMPOSE_CMD exec -T app php artisan cache:clear || true
             
             # Cache pour la production
-            php artisan config:cache || true
-            php artisan route:cache || true
-            php artisan view:cache || true
+            $COMPOSE_CMD exec -T app php artisan config:cache || true
+            $COMPOSE_CMD exec -T app php artisan route:cache || true
+            $COMPOSE_CMD exec -T app php artisan view:cache || true
             
             # Créer le lien de stockage
-            php artisan storage:link || true
+            $COMPOSE_CMD exec -T app php artisan storage:link || true
             
-            # 11. Vérification finale des permissions
-            chown -R www-data:www-data storage bootstrap/cache || true
-            chmod -R 775 storage bootstrap/cache || true
+            # 15. Exécuter les migrations si nécessaire
+            echo "🗄️  Vérification des migrations..."
+            $COMPOSE_CMD exec -T app php artisan migrate --force || echo "⚠️  Erreur lors des migrations (peut être normal si déjà à jour)"
             
-            # 12. Test de santé de l'application
+            # 16. Configurer les permissions dans le conteneur
+            echo "🔐 Configuration des permissions dans le conteneur..."
+            $COMPOSE_CMD exec -T app chown -R www-data:www-data storage bootstrap/cache || true
+            $COMPOSE_CMD exec -T app chmod -R 775 storage bootstrap/cache || true
+            
+            # 17. Test de santé de l'application
             echo "🏥 Test de santé de l'application..."
-            sleep 3
+            sleep 10
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:6500 || echo "000")
             if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ] || [ "$HTTP_STATUS" = "301" ]; then
               echo "✅ Application répond correctement (HTTP $HTTP_STATUS)"
             else
               echo "⚠️  Application répond avec HTTP $HTTP_STATUS"
-              echo "Vérification des logs pour diagnostiquer..."
-              tail -30 storage/logs/laravel.log 2>/dev/null | grep -i "error\|exception\|fatal" | tail -10 || echo "Aucune erreur récente dans les logs"
+              echo "Vérification des conteneurs..."
+              $COMPOSE_CMD ps
+              echo ""
+              echo "Logs des conteneurs:"
+              $COMPOSE_CMD logs --tail=50 app || true
+              $COMPOSE_CMD logs --tail=50 nginx || true
+              echo ""
+              echo "Logs Laravel:"
+              $COMPOSE_CMD exec -T app tail -50 storage/logs/laravel.log 2>/dev/null | grep -i "error\|exception\|fatal" | tail -15 || echo "Aucune erreur récente dans les logs"
             fi
             
-            # 13. Vérifier le statut
+            # 18. Vérifier le statut
             echo ""
             echo "=========================================="
             echo "✅ Déploiement terminé avec succès!"
             echo "=========================================="
             echo "Application accessible sur le port 6500"
             echo ""
+            echo "Statut des conteneurs:"
+            $COMPOSE_CMD ps
+            echo ""
             echo "Vérifications:"
-            echo "- PHP version: $(php -v | head -1)"
-            echo "- Composer version: $(composer --version)"
-            echo "- Permissions storage: $(ls -ld storage | awk '{print $1, $3, $4}')"
+            echo "- Docker version: $(docker --version)"
+            echo "- Conteneurs actifs:"
+            docker ps --filter "name=gloshop" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
             echo ""
             echo "Dernières lignes des logs:"
-            tail -20 storage/logs/laravel.log 2>/dev/null || echo "Aucun log disponible"
+            $COMPOSE_CMD exec -T app tail -20 storage/logs/laravel.log 2>/dev/null || echo "Aucun log disponible"
 
       - name: ✅ Deployment Status
         run: |

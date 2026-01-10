@@ -21,7 +21,7 @@ use App\Http\Controllers\Admin\UserController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/admin/login');
 });
 
 Route::get('/privacy', [PrivacyController::class, 'index'])->name('privacy');
