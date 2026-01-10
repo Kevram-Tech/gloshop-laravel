@@ -94,19 +94,53 @@ jobs:
             rm -f deploy.tar.gz
             echo "✅ Fichiers extraits"
             
-            # 3. Restaurer .env si sauvegardé
+            # 3. Gérer .env
             if [ -f .env.backup ]; then
-              echo "💾 Restauration de .env..."
+              echo "💾 Restauration de .env depuis la sauvegarde..."
               mv .env.backup .env
-            elif [ ! -f .env ] && [ -f .env.example ]; then
+              echo "✅ .env restauré depuis la sauvegarde"
+            elif [ -f .env ]; then
+              echo "✅ .env existe déjà"
+            elif [ -f .env.example ]; then
               echo "⚠️  .env n'existe pas. Création depuis .env.example..."
               cp .env.example .env
+              echo "✅ .env créé depuis .env.example"
+              echo "⚠️  IMPORTANT: Vérifiez que .env contient les bonnes valeurs!"
+            else
+              echo "⚠️  .env et .env.example n'existent pas. Création d'un .env minimal..."
+              echo "APP_NAME=GloShop" > .env
+              echo "APP_ENV=production" >> .env
+              echo "APP_KEY=" >> .env
+              echo "APP_DEBUG=false" >> .env
+              echo "APP_URL=http://localhost:6500" >> .env
+              echo "" >> .env
+              echo "LOG_CHANNEL=stack" >> .env
+              echo "LOG_LEVEL=error" >> .env
+              echo "" >> .env
+              echo "DB_CONNECTION=mysql" >> .env
+              echo "DB_HOST=host.docker.internal" >> .env
+              echo "DB_PORT=3306" >> .env
+              echo "DB_DATABASE=gloshop" >> .env
+              echo "DB_USERNAME=gloshop" >> .env
+              echo "DB_PASSWORD=" >> .env
+              echo "" >> .env
+              echo "BROADCAST_DRIVER=log" >> .env
+              echo "CACHE_DRIVER=redis" >> .env
+              echo "FILESYSTEM_DISK=local" >> .env
+              echo "QUEUE_CONNECTION=redis" >> .env
+              echo "SESSION_DRIVER=redis" >> .env
+              echo "SESSION_LIFETIME=120" >> .env
+              echo "" >> .env
+              echo "REDIS_HOST=redis" >> .env
+              echo "REDIS_PASSWORD=null" >> .env
+              echo "REDIS_PORT=6379" >> .env
+              echo "✅ .env minimal créé"
               echo "⚠️  IMPORTANT: Configurez .env avec vos valeurs réelles!"
             fi
             
-            # Vérifier que .env existe et est lisible
+            # Vérifier que .env existe maintenant
             if [ ! -f .env ]; then
-              echo "❌ ERREUR: .env n'existe toujours pas après restauration!"
+              echo "❌ ERREUR: Impossible de créer .env!"
               exit 1
             fi
             
