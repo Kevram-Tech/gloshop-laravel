@@ -11,6 +11,7 @@
 docker.env
 docker.env.backup
 deploy.tar.gz
+*.log
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
