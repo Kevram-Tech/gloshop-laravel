@@ -31,9 +31,6 @@ jobs:
               --exclude='.phpunit.cache' \
               --exclude='*.log' \
               --exclude='deploy.tar.gz' \
-              --exclude='docker-compose*.yml' \
-              --exclude='Dockerfile*' \
-              --exclude='docker/' \
               -czf /tmp/deploy.tar.gz .
           mv /tmp/deploy.tar.gz ./deploy.tar.gz
 
