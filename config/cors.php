@@ -19,7 +19,17 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'http://72.60.188.146:6500',
+        'https://72.60.188.146:6500',
+        'http://localhost:6500',
+        'http://localhost:3000',
+        'http://localhost:8080',
+        'http://127.0.0.1:6500',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:8080',
+        '*', // Permet toutes les origines pour les apps mobiles
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -29,6 +39,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true, // Permet les cookies/auth pour les apps mobiles
 
 ];
