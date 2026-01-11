@@ -7,6 +7,8 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\User;
+use App\Models\Promotion;
+use App\Models\PromoCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -639,6 +641,407 @@ class AdminController extends Controller
                 'total_units' => $products->sum('stock'),
                 'by_product' => $stockByProduct,
             ],
+        ]);
+    }
+
+    // Promotions
+    public function getPromotions(Request $request): JsonResponse
+    {
+        $query = Promotion::query();
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('status')) {
+            if ($request->status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($request->status === 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
+
+        $promotions = $query->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 20));
+
+        $promotions->getCollection()->transform(function ($promotion) {
+            return [
+                'id' => $promotion->id,
+                'title' => $promotion->title,
+                'description' => $promotion->description,
+                'image' => $promotion->image ? Storage::url($promotion->image) : null,
+                'type' => $promotion->type,
+                'discount_value' => (float) $promotion->discount_value,
+                'min_purchase_amount' => $promotion->min_purchase_amount ? (float) $promotion->min_purchase_amount : null,
+                'start_date' => $promotion->start_date->toIso8601String(),
+                'end_date' => $promotion->end_date->toIso8601String(),
+                'is_active' => $promotion->is_active,
+                'applicable_categories' => $promotion->applicable_categories ?? [],
+                'applicable_products' => $promotion->applicable_products ?? [],
+                'usage_limit' => $promotion->usage_limit,
+                'usage_count' => $promotion->usage_count ?? 0,
+                'created_at' => $promotion->created_at->toIso8601String(),
+                'updated_at' => $promotion->updated_at->toIso8601String(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $promotions->items(),
+            'pagination' => [
+                'current_page' => $promotions->currentPage(),
+                'last_page' => $promotions->lastPage(),
+                'per_page' => $promotions->perPage(),
+                'total' => $promotions->total(),
+            ],
+        ]);
+    }
+
+    public function getPromotion(int $id): JsonResponse
+    {
+        $promotion = Promotion::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $promotion->id,
+                'title' => $promotion->title,
+                'description' => $promotion->description,
+                'image' => $promotion->image ? Storage::url($promotion->image) : null,
+                'type' => $promotion->type,
+                'discount_value' => (float) $promotion->discount_value,
+                'min_purchase_amount' => $promotion->min_purchase_amount ? (float) $promotion->min_purchase_amount : null,
+                'start_date' => $promotion->start_date->toIso8601String(),
+                'end_date' => $promotion->end_date->toIso8601String(),
+                'is_active' => $promotion->is_active,
+                'applicable_categories' => $promotion->applicable_categories ?? [],
+                'applicable_products' => $promotion->applicable_products ?? [],
+                'usage_limit' => $promotion->usage_limit,
+                'usage_count' => $promotion->usage_count ?? 0,
+                'created_at' => $promotion->created_at->toIso8601String(),
+                'updated_at' => $promotion->updated_at->toIso8601String(),
+            ],
+        ]);
+    }
+
+    public function createPromotion(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'required|in:percentage,fixed,free_shipping',
+            'discount_value' => 'nullable|numeric|min:0',
+            'min_purchase_amount' => 'nullable|numeric|min:0',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'is_active' => 'boolean',
+            'applicable_categories' => 'nullable|array',
+            'applicable_products' => 'nullable|array',
+            'usage_limit' => 'nullable|integer|min:1',
+        ]);
+
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
+        $validated['usage_count'] = 0;
+
+        $promotion = Promotion::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Promotion créée avec succès',
+            'data' => [
+                'id' => $promotion->id,
+                'title' => $promotion->title,
+                'description' => $promotion->description,
+                'image' => $promotion->image ? Storage::url($promotion->image) : null,
+                'type' => $promotion->type,
+                'discount_value' => (float) $promotion->discount_value,
+                'min_purchase_amount' => $promotion->min_purchase_amount ? (float) $promotion->min_purchase_amount : null,
+                'start_date' => $promotion->start_date->toIso8601String(),
+                'end_date' => $promotion->end_date->toIso8601String(),
+                'is_active' => $promotion->is_active,
+                'applicable_categories' => $promotion->applicable_categories ?? [],
+                'applicable_products' => $promotion->applicable_products ?? [],
+                'usage_limit' => $promotion->usage_limit,
+                'usage_count' => $promotion->usage_count ?? 0,
+            ],
+        ], 201);
+    }
+
+    public function updatePromotion(Request $request, int $id): JsonResponse
+    {
+        $promotion = Promotion::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'sometimes|required|in:percentage,fixed,free_shipping',
+            'discount_value' => 'nullable|numeric|min:0',
+            'min_purchase_amount' => 'nullable|numeric|min:0',
+            'start_date' => 'sometimes|required|date',
+            'end_date' => 'sometimes|required|date|after:start_date',
+            'is_active' => 'boolean',
+            'applicable_categories' => 'nullable|array',
+            'applicable_products' => 'nullable|array',
+            'usage_limit' => 'nullable|integer|min:1',
+        ]);
+
+        if ($request->has('is_active')) {
+            $validated['is_active'] = $request->boolean('is_active');
+        }
+
+        $promotion->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Promotion mise à jour avec succès',
+            'data' => [
+                'id' => $promotion->id,
+                'title' => $promotion->title,
+                'description' => $promotion->description,
+                'image' => $promotion->image ? Storage::url($promotion->image) : null,
+                'type' => $promotion->type,
+                'discount_value' => (float) $promotion->discount_value,
+                'min_purchase_amount' => $promotion->min_purchase_amount ? (float) $promotion->min_purchase_amount : null,
+                'start_date' => $promotion->start_date->toIso8601String(),
+                'end_date' => $promotion->end_date->toIso8601String(),
+                'is_active' => $promotion->is_active,
+                'applicable_categories' => $promotion->applicable_categories ?? [],
+                'applicable_products' => $promotion->applicable_products ?? [],
+                'usage_limit' => $promotion->usage_limit,
+                'usage_count' => $promotion->usage_count ?? 0,
+            ],
+        ]);
+    }
+
+    public function deletePromotion(int $id): JsonResponse
+    {
+        $promotion = Promotion::findOrFail($id);
+
+        if ($promotion->image) {
+            Storage::disk('public')->delete($promotion->image);
+        }
+
+        $promotion->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Promotion supprimée avec succès',
+        ]);
+    }
+
+    // Promo Codes
+    public function getPromoCodes(Request $request): JsonResponse
+    {
+        $query = PromoCode::query();
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('status')) {
+            if ($request->status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($request->status === 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
+
+        $promoCodes = $query->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 20));
+
+        $promoCodes->getCollection()->transform(function ($promoCode) {
+            return [
+                'id' => $promoCode->id,
+                'code' => $promoCode->code,
+                'name' => $promoCode->name,
+                'description' => $promoCode->description,
+                'type' => $promoCode->type,
+                'discount_value' => (float) $promoCode->discount_value,
+                'min_purchase_amount' => $promoCode->min_purchase_amount ? (float) $promoCode->min_purchase_amount : null,
+                'max_discount_amount' => $promoCode->max_discount_amount ? (float) $promoCode->max_discount_amount : null,
+                'start_date' => $promoCode->start_date->toIso8601String(),
+                'end_date' => $promoCode->end_date->toIso8601String(),
+                'is_active' => $promoCode->is_active,
+                'usage_limit' => $promoCode->usage_limit,
+                'usage_limit_per_user' => $promoCode->usage_limit_per_user,
+                'usage_count' => $promoCode->usage_count ?? 0,
+                'applicable_categories' => $promoCode->applicable_categories ?? [],
+                'applicable_products' => $promoCode->applicable_products ?? [],
+                'created_at' => $promoCode->created_at->toIso8601String(),
+                'updated_at' => $promoCode->updated_at->toIso8601String(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $promoCodes->items(),
+            'pagination' => [
+                'current_page' => $promoCodes->currentPage(),
+                'last_page' => $promoCodes->lastPage(),
+                'per_page' => $promoCodes->perPage(),
+                'total' => $promoCodes->total(),
+            ],
+        ]);
+    }
+
+    public function getPromoCode(int $id): JsonResponse
+    {
+        $promoCode = PromoCode::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $promoCode->id,
+                'code' => $promoCode->code,
+                'name' => $promoCode->name,
+                'description' => $promoCode->description,
+                'type' => $promoCode->type,
+                'discount_value' => (float) $promoCode->discount_value,
+                'min_purchase_amount' => $promoCode->min_purchase_amount ? (float) $promoCode->min_purchase_amount : null,
+                'max_discount_amount' => $promoCode->max_discount_amount ? (float) $promoCode->max_discount_amount : null,
+                'start_date' => $promoCode->start_date->toIso8601String(),
+                'end_date' => $promoCode->end_date->toIso8601String(),
+                'is_active' => $promoCode->is_active,
+                'usage_limit' => $promoCode->usage_limit,
+                'usage_limit_per_user' => $promoCode->usage_limit_per_user,
+                'usage_count' => $promoCode->usage_count ?? 0,
+                'applicable_categories' => $promoCode->applicable_categories ?? [],
+                'applicable_products' => $promoCode->applicable_products ?? [],
+                'created_at' => $promoCode->created_at->toIso8601String(),
+                'updated_at' => $promoCode->updated_at->toIso8601String(),
+            ],
+        ]);
+    }
+
+    public function createPromoCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'code' => 'nullable|string|max:50|unique:promo_codes,code',
+            'name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'required|in:percentage,fixed,free_shipping',
+            'discount_value' => 'required|numeric|min:0',
+            'min_purchase_amount' => 'nullable|numeric|min:0',
+            'max_discount_amount' => 'nullable|numeric|min:0',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'is_active' => 'boolean',
+            'usage_limit' => 'nullable|integer|min:1',
+            'usage_limit_per_user' => 'nullable|integer|min:1',
+            'applicable_categories' => 'nullable|array',
+            'applicable_products' => 'nullable|array',
+        ]);
+
+        // Generate code if not provided
+        if (empty($validated['code'])) {
+            do {
+                $validated['code'] = strtoupper(Str::random(8));
+            } while (PromoCode::where('code', $validated['code'])->exists());
+        } else {
+            $validated['code'] = strtoupper($validated['code']);
+        }
+
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
+        $validated['usage_count'] = 0;
+
+        $promoCode = PromoCode::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Code promo créé avec succès',
+            'data' => [
+                'id' => $promoCode->id,
+                'code' => $promoCode->code,
+                'name' => $promoCode->name,
+                'description' => $promoCode->description,
+                'type' => $promoCode->type,
+                'discount_value' => (float) $promoCode->discount_value,
+                'min_purchase_amount' => $promoCode->min_purchase_amount ? (float) $promoCode->min_purchase_amount : null,
+                'max_discount_amount' => $promoCode->max_discount_amount ? (float) $promoCode->max_discount_amount : null,
+                'start_date' => $promoCode->start_date->toIso8601String(),
+                'end_date' => $promoCode->end_date->toIso8601String(),
+                'is_active' => $promoCode->is_active,
+                'usage_limit' => $promoCode->usage_limit,
+                'usage_limit_per_user' => $promoCode->usage_limit_per_user,
+                'usage_count' => $promoCode->usage_count ?? 0,
+                'applicable_categories' => $promoCode->applicable_categories ?? [],
+                'applicable_products' => $promoCode->applicable_products ?? [],
+            ],
+        ], 201);
+    }
+
+    public function updatePromoCode(Request $request, int $id): JsonResponse
+    {
+        $promoCode = PromoCode::findOrFail($id);
+
+        $validated = $request->validate([
+            'code' => 'sometimes|required|string|max:50|unique:promo_codes,code,' . $id,
+            'name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'sometimes|required|in:percentage,fixed,free_shipping',
+            'discount_value' => 'sometimes|required|numeric|min:0',
+            'min_purchase_amount' => 'nullable|numeric|min:0',
+            'max_discount_amount' => 'nullable|numeric|min:0',
+            'start_date' => 'sometimes|required|date',
+            'end_date' => 'sometimes|required|date|after:start_date',
+            'is_active' => 'boolean',
+            'usage_limit' => 'nullable|integer|min:1',
+            'usage_limit_per_user' => 'nullable|integer|min:1',
+            'applicable_categories' => 'nullable|array',
+            'applicable_products' => 'nullable|array',
+        ]);
+
+        if (isset($validated['code'])) {
+            $validated['code'] = strtoupper($validated['code']);
+        }
+
+        if ($request->has('is_active')) {
+            $validated['is_active'] = $request->boolean('is_active');
+        }
+
+        $promoCode->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Code promo mis à jour avec succès',
+            'data' => [
+                'id' => $promoCode->id,
+                'code' => $promoCode->code,
+                'name' => $promoCode->name,
+                'description' => $promoCode->description,
+                'type' => $promoCode->type,
+                'discount_value' => (float) $promoCode->discount_value,
+                'min_purchase_amount' => $promoCode->min_purchase_amount ? (float) $promoCode->min_purchase_amount : null,
+                'max_discount_amount' => $promoCode->max_discount_amount ? (float) $promoCode->max_discount_amount : null,
+                'start_date' => $promoCode->start_date->toIso8601String(),
+                'end_date' => $promoCode->end_date->toIso8601String(),
+                'is_active' => $promoCode->is_active,
+                'usage_limit' => $promoCode->usage_limit,
+                'usage_limit_per_user' => $promoCode->usage_limit_per_user,
+                'usage_count' => $promoCode->usage_count ?? 0,
+                'applicable_categories' => $promoCode->applicable_categories ?? [],
+                'applicable_products' => $promoCode->applicable_products ?? [],
+            ],
+        ]);
+    }
+
+    public function deletePromoCode(int $id): JsonResponse
+    {
+        $promoCode = PromoCode::findOrFail($id);
+        $promoCode->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Code promo supprimé avec succès',
         ]);
     }
 }

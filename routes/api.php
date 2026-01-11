@@ -141,5 +141,21 @@ Route::prefix('admin')->group(function () {
             Route::get('/top-selling-products', [AdminController::class, 'getTopSellingProducts']);
             Route::get('/stock', [AdminController::class, 'getStockStatistics']);
         });
+
+        Route::prefix('promotions')->group(function () {
+            Route::get('/', [AdminController::class, 'getPromotions']);
+            Route::post('/', [AdminController::class, 'createPromotion']);
+            Route::get('/{id}', [AdminController::class, 'getPromotion']);
+            Route::put('/{id}', [AdminController::class, 'updatePromotion']);
+            Route::delete('/{id}', [AdminController::class, 'deletePromotion']);
+        });
+
+        Route::prefix('promo-codes')->group(function () {
+            Route::get('/', [AdminController::class, 'getPromoCodes']);
+            Route::post('/', [AdminController::class, 'createPromoCode']);
+            Route::get('/{id}', [AdminController::class, 'getPromoCode']);
+            Route::put('/{id}', [AdminController::class, 'updatePromoCode']);
+            Route::delete('/{id}', [AdminController::class, 'deletePromoCode']);
+        });
     });
 });
