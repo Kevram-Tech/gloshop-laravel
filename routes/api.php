@@ -93,7 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('promo-codes')->group(function () {
-        Route::post('/validate', [PromoCodeController::class, 'validate']);
+        Route::post('/validate', [PromoCodeController::class, 'validateCode']);
         Route::get('/available', [PromoCodeController::class, 'available']);
     });
 });

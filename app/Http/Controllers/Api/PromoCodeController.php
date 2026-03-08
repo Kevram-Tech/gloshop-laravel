@@ -14,7 +14,7 @@ class PromoCodeController extends Controller
     /**
      * Validate a promo code
      */
-    public function validate(Request $request): JsonResponse
+    public function validateCode(Request $request): JsonResponse
     {
         $request->validate([
             'code' => 'required|string',
@@ -26,7 +26,7 @@ class PromoCodeController extends Controller
         if (!$promoCode) {
             return response()->json([
                 'success' => false,
-                'message' => 'Code promo invalide',
+                'message' => 'Code promo invalide ou inexistant',
             ], 404);
         }
 

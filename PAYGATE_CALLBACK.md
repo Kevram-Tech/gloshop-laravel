@@ -69,3 +69,8 @@ Tous les callbacks sont enregistrés dans les logs Laravel :
 - Succès : `storage/logs/laravel.log`
 - Erreurs : `storage/logs/laravel.log` avec niveau ERROR
 
+
+
+
+
+
