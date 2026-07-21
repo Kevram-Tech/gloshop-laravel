@@ -14,7 +14,7 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@gloshop.com'],
+            ['email' => 'admin@mishop.com'],
             [
                 'name' => 'Administrateur',
                 'password' => Hash::make('admin123'),
@@ -23,7 +23,7 @@ class AdminUserSeeder extends Seeder
         );
 
         $this->command->info('Utilisateur admin créé avec succès!');
-        $this->command->info('Email: admin@gloshop.com');
+        $this->command->info('Email: admin@mishop.com');
         $this->command->info('Mot de passe: admin123');
     }
 }

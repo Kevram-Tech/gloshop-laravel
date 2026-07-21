@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Connexion Admin - GloShop</title>
+    <title>Connexion Admin - Mishop</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,7 +38,7 @@
                     <i class="fas fa-shopping-bag text-gray-300 text-sm"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-gray-900 uppercase tracking-tight">GloShop</h1>
+                    <h1 class="text-lg font-bold text-gray-900 uppercase tracking-tight">Mishop</h1>
                     <p class="text-xs text-gray-500 font-mono">ADMIN</p>
                 </div>
             </div>

@@ -18,7 +18,7 @@ class ProductController extends Controller
             return [];
         }
 
-        $baseUrl = $baseUrl ?? config('app.url', 'http://72.60.188.146:6500');
+        $baseUrl = $baseUrl ?? config('app.url', 'http://192.168.43.15:6500');
         
         return array_map(function ($image) use ($baseUrl) {
             if (filter_var($image, FILTER_VALIDATE_URL)) {

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'GloShop Admin')</title>
+    <title>@yield('title', 'Mishop Admin')</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -41,7 +41,7 @@
                         <i class="fas fa-shopping-bag text-gray-300 text-xs"></i>
                     </div>
                     <div>
-                        <h1 class="text-sm font-bold text-gray-100 uppercase tracking-tight">GloShop</h1>
+                        <h1 class="text-sm font-bold text-gray-100 uppercase tracking-tight">Mishop</h1>
                         <p class="text-xs text-gray-400 font-mono">ADMIN</p>
                     </div>
                 </div>

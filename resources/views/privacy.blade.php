@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Politique de Confidentialité - GloShop</title>
+    <title>Politique de Confidentialité - Mishop</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -24,7 +24,7 @@
         <header class="bg-white shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div class="flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-900">GloShop</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">Mishop</h1>
                     <a href="{{ url('/') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
                         ← Retour à l'accueil
                     </a>
@@ -43,10 +43,10 @@
                     <section class="mb-8">
                         <h2 class="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
                         <p class="text-gray-700 leading-relaxed mb-4">
-                            Bienvenue sur GloShop. Nous nous engageons à protéger votre vie privée et à garantir la sécurité de vos informations personnelles. Cette politique de confidentialité explique comment nous collectons, utilisons, partageons et protégeons vos données lorsque vous utilisez notre application mobile et nos services.
+                            Bienvenue sur Mishop. Nous nous engageons à protéger votre vie privée et à garantir la sécurité de vos informations personnelles. Cette politique de confidentialité explique comment nous collectons, utilisons, partageons et protégeons vos données lorsque vous utilisez notre application mobile et nos services.
                         </p>
                         <p class="text-gray-700 leading-relaxed">
-                            En utilisant GloShop, vous acceptez les pratiques décrites dans cette politique. Si vous n'acceptez pas cette politique, veuillez ne pas utiliser nos services.
+                            En utilisant Mishop, vous acceptez les pratiques décrites dans cette politique. Si vous n'acceptez pas cette politique, veuillez ne pas utiliser nos services.
                         </p>
                     </section>
 
@@ -192,9 +192,9 @@
                             Si vous avez des questions concernant cette politique de confidentialité ou si vous souhaitez exercer vos droits, veuillez nous contacter :
                         </p>
                         <div class="bg-gray-50 rounded-lg p-6">
-                            <p class="text-gray-700 mb-2"><strong>GloShop</strong></p>
-                            <p class="text-gray-700 mb-2">Email : <a href="mailto:privacy@gloshop.com" class="text-blue-600 hover:underline">privacy@gloshop.com</a></p>
-                            <p class="text-gray-700">Support : <a href="mailto:support@gloshop.com" class="text-blue-600 hover:underline">support@gloshop.com</a></p>
+                            <p class="text-gray-700 mb-2"><strong>Mishop</strong></p>
+                            <p class="text-gray-700 mb-2">Email : <a href="mailto:privacy@mishop.com" class="text-blue-600 hover:underline">privacy@mishop.com</a></p>
+                            <p class="text-gray-700">Support : <a href="mailto:support@mishop.com" class="text-blue-600 hover:underline">support@mishop.com</a></p>
                         </div>
                     </section>
 
@@ -210,7 +210,7 @@
                 <!-- Footer -->
                 <div class="mt-12 pt-8 border-t border-gray-200">
                     <p class="text-sm text-gray-500 text-center">
-                        © {{ date('Y') }} GloShop. Tous droits réservés.
+                        © {{ date('Y') }} Mishop. Tous droits réservés.
                     </p>
                 </div>
             </div>

@@ -46,7 +46,7 @@ class ApiEndpointsTest extends TestCase
 
         // Create admin user
         $this->admin = User::factory()->create([
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => Hash::make('password123'),
             'is_admin' => true,
         ]);
@@ -591,7 +591,7 @@ class ApiEndpointsTest extends TestCase
     {
         // Test admin login
         $response = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $response->assertStatus(200);
@@ -611,7 +611,7 @@ class ApiEndpointsTest extends TestCase
     {
         // Login as admin
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');
@@ -630,7 +630,7 @@ class ApiEndpointsTest extends TestCase
     {
         // Login as admin
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');
@@ -669,7 +669,7 @@ class ApiEndpointsTest extends TestCase
     {
         // Login as admin
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');
@@ -735,7 +735,7 @@ class ApiEndpointsTest extends TestCase
     {
         // Login as admin
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');
@@ -781,7 +781,7 @@ class ApiEndpointsTest extends TestCase
     {
         // Login as admin
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');
@@ -812,7 +812,7 @@ class ApiEndpointsTest extends TestCase
     {
         // Login as admin
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');
@@ -857,7 +857,7 @@ class ApiEndpointsTest extends TestCase
     public function test_admin_promotions_endpoints(): void
     {
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');
@@ -913,7 +913,7 @@ class ApiEndpointsTest extends TestCase
     public function test_admin_promo_codes_endpoints(): void
     {
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');
@@ -969,7 +969,7 @@ class ApiEndpointsTest extends TestCase
     public function test_admin_upload_images(): void
     {
         $loginResponse = $this->postJson('/api/admin/login', [
-            'email' => 'admin@gloshop.com',
+            'email' => 'admin@mishop.com',
             'password' => 'password123',
         ]);
         $token = $loginResponse->json('data.token');

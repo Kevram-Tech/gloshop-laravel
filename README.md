@@ -7,7 +7,7 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## GloShop Laravel API
+## Mishop Laravel API
 
 Application e-commerce Laravel avec API REST et backoffice d'administration.
 

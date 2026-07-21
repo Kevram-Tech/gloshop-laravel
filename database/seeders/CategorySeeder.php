@@ -16,7 +16,7 @@ class CategorySeeder extends Seeder
             [
                 'name' => 'Vêtements',
                 'slug' => 'vetements',
-                'description' => 'Collection complète de vêtements pour femmes : robes, tops, pantalons, jupes et plus encore.',
+                'description' => 'Collection de vêtements pour tous les styles : robes, tops, pantalons, jupes et plus encore.',
                 'image' => null,
                 'is_active' => true,
             ],
@@ -72,7 +72,7 @@ class CategorySeeder extends Seeder
             [
                 'name' => 'Sportswear',
                 'slug' => 'sportswear',
-                'description' => 'Vêtements de sport pour femmes : leggings, tops de sport, brassières de sport et plus.',
+                'description' => 'Vêtements de sport : leggings, tops, brassières et pièces techniques pour bouger en style.',
                 'image' => null,
                 'is_active' => true,
             ],

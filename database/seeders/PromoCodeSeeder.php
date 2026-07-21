@@ -120,6 +120,21 @@ class PromoCodeSeeder extends Seeder
                 'usage_limit_per_user' => null,
                 'usage_count' => 0,
             ],
+            [
+                'code' => 'MISHOP10',
+                'name' => 'Mishop -10%',
+                'description' => 'Code démo Mishop : 10% de réduction',
+                'type' => 'percentage',
+                'discount_value' => 10.00,
+                'min_purchase_amount' => 0,
+                'max_discount_amount' => 5000.00,
+                'start_date' => Carbon::now(),
+                'end_date' => Carbon::now()->addYear(),
+                'is_active' => true,
+                'usage_limit' => null,
+                'usage_limit_per_user' => 5,
+                'usage_count' => 0,
+            ],
         ];
 
         foreach ($promoCodes as $promoCode) {

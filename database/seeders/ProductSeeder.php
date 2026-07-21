@@ -32,12 +32,12 @@ class ProductSeeder extends Seeder
             // Vêtements
             [
                 'category_id' => $vetements?->id ?? 1,
-                'name' => 'Robe en Pagne Togolais - Motif Kente',
-                'slug' => 'robe-pagne-togolais-motif-kente',
-                'description' => 'Magnifique robe confectionnée en pagne authentique du Togo avec le motif Kente traditionnel. Cette robe élégante allie modernité et tradition africaine. Parfaite pour les occasions spéciales et les événements culturels.',
+                'name' => 'Robe midi fluide — Motifs colorés',
+                'slug' => 'robe-midi-fluide-motifs-colores',
+                'description' => 'Robe midi légère aux motifs vibrants. Coupe fluide, confortable pour le quotidien comme pour les sorties. Une pièce polyvalente qui s’adapte à tous les styles.',
                 'price' => 45000,
                 'discount_price' => 38000,
-                'sku' => 'ROBE-KENTE-001',
+                'sku' => 'ROBE-MIDI-001',
                 'stock' => 15,
                 'images' => [
                     'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&h=800&fit=crop',
@@ -50,12 +50,12 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $vetements?->id ?? 1,
-                'name' => 'Ensemble Boubou Togolais - Style Moderne',
-                'slug' => 'ensemble-boubou-togolais-style-moderne',
-                'description' => 'Ensemble boubou élégant inspiré de la mode togolaise, revisité avec un style moderne. Composé d\'une tunique ample et d\'un pantalon assorti. Tissu de qualité supérieure, confortable et respirant.',
+                'name' => 'Ensemble tunique & pantalon — Coupe moderne',
+                'slug' => 'ensemble-tunique-pantalon-coupe-moderne',
+                'description' => 'Ensemble élégant composé d’une tunique ample et d’un pantalon assorti. Tissu respirant, silhouette contemporaine — idéal bureau ou week-end.',
                 'price' => 55000,
                 'discount_price' => null,
-                'sku' => 'BOUBOU-TOGO-001',
+                'sku' => 'ENS-TUN-001',
                 'stock' => 12,
                 'images' => [
                     'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&h=800&fit=crop',
@@ -68,12 +68,12 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $vetements?->id ?? 1,
-                'name' => 'Jupe Crayon en Wax Togolais',
-                'slug' => 'jupe-crayon-wax-togolais',
-                'description' => 'Jupe crayon moderne en tissu wax authentique du Togo. Coupe ajustée et élégante, parfaite pour le bureau ou les sorties. Motifs colorés et vibrants typiques de l\'Afrique de l\'Ouest.',
+                'name' => 'Jupe crayon — Imprimé contemporain',
+                'slug' => 'jupe-crayon-imprime-contemporain',
+                'description' => 'Jupe crayon ajustée aux motifs graphiques. Coupe élégante pour le travail ou une soirée. Facile à associer avec un top uni.',
                 'price' => 25000,
                 'discount_price' => 20000,
-                'sku' => 'JUP-WAX-TOGO-001',
+                'sku' => 'JUP-IMP-001',
                 'stock' => 20,
                 'images' => [
                     'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=800&h=800&fit=crop',
@@ -85,15 +85,15 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $vetements?->id ?? 1,
-                'name' => 'Top en Pagne - Motifs Géométriques',
-                'slug' => 'top-pagne-motifs-geometriques',
-                'description' => 'Top élégant en pagne avec motifs géométriques traditionnels du Togo. Manches courtes, coupe moderne. Idéal pour créer des looks authentiques et stylés.',
+                'name' => 'Top manches courtes — Motifs géométriques',
+                'slug' => 'top-manches-courtes-motifs-geometriques',
+                'description' => 'Top moderne aux motifs géométriques. Coupe nette, manches courtes — une base stylée pour composer vos looks du quotidien.',
                 'price' => 18000,
                 'discount_price' => null,
-                'sku' => 'TOP-PAGNE-001',
+                'sku' => 'TOP-GEO-001',
                 'stock' => 25,
                 'images' => [
-                    'https://images.unsplash.com/photo-1594633312681-425c7b7b97ccd1?w=800&h=800&fit=crop',
+                    'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&h=800&fit=crop',
                 ],
                 'sizes' => ['S', 'M', 'L', 'XL'],
                 'colors' => ['Orange et Noir', 'Bleu et Blanc', 'Rouge et Jaune'],
@@ -104,12 +104,12 @@ class ProductSeeder extends Seeder
             // Chaussures
             [
                 'category_id' => $chaussures?->id ?? 2,
-                'name' => 'Sandales Togolaises en Cuir - Artisanat Local',
-                'slug' => 'sandales-togolaises-cuir-artisanat',
-                'description' => 'Sandales authentiques fabriquées au Togo par des artisans locaux. Cuir de qualité, semelle confortable. Design traditionnel revisité avec une touche moderne.',
+                'name' => 'Sandales en cuir — Confort quotidien',
+                'slug' => 'sandales-cuir-confort-quotidien',
+                'description' => 'Sandales en cuir souple, semelle confortable. Design épuré qui s’accorde avec presque toutes les tenues, de la ville aux week-ends.',
                 'price' => 35000,
                 'discount_price' => 30000,
-                'sku' => 'SAND-TOGO-001',
+                'sku' => 'SAND-CUIR-001',
                 'stock' => 18,
                 'images' => [
                     'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&h=800&fit=crop',
@@ -121,12 +121,12 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $chaussures?->id ?? 2,
-                'name' => 'Escarpins à Motifs Africains',
-                'slug' => 'escarpins-motifs-africains',
-                'description' => 'Escarpins élégants avec motifs inspirés de l\'art togolais. Talon moyen, confortables pour toute la journée. Parfaits pour compléter une tenue moderne avec une touche africaine.',
+                'name' => 'Escarpins — Talon moyen',
+                'slug' => 'escarpins-talon-moyen',
+                'description' => 'Escarpins élégants à talon moyen pour tenir toute la journée. Une touche de style pour compléter une tenue sophistiquée.',
                 'price' => 42000,
                 'discount_price' => null,
-                'sku' => 'ESCARP-AFR-001',
+                'sku' => 'ESCARP-001',
                 'stock' => 10,
                 'images' => [
                     'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=800&fit=crop',
@@ -140,12 +140,12 @@ class ProductSeeder extends Seeder
             // Accessoires
             [
                 'category_id' => $accessoires?->id ?? 3,
-                'name' => 'Foulard en Pagne Togolais - Grand Format',
-                'slug' => 'foulard-pagne-togolais-grand-format',
-                'description' => 'Grand foulard en pagne authentique du Togo. Motifs colorés et vibrants. Polyvalent : peut être porté comme écharpe, turban ou accessoire de cheveux. 100% coton.',
+                'name' => 'Foulard grand format — Imprimé vif',
+                'slug' => 'foulard-grand-format-imprime-vif',
+                'description' => 'Grand foulard polyvalent : écharpe, accessoire cheveux ou détail de look. Coton doux, motifs colorés qui dynamisent une tenue simple.',
                 'price' => 12000,
                 'discount_price' => 10000,
-                'sku' => 'FOUL-PAGNE-001',
+                'sku' => 'FOUL-001',
                 'stock' => 30,
                 'images' => [
                     'https://images.unsplash.com/photo-1601925260368-ae2f83d34e48?w=800&h=800&fit=crop',
@@ -157,12 +157,12 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $accessoires?->id ?? 3,
-                'name' => 'Ceinture en Tissu Wax - Large',
-                'slug' => 'ceinture-tissu-wax-large',
-                'description' => 'Ceinture large en tissu wax du Togo avec boucle métallique. Ajoute une touche d\'authenticité à toute tenue. Ajustable, confortable et stylée.',
+                'name' => 'Ceinture large — Boucle métallique',
+                'slug' => 'ceinture-large-boucle-metallique',
+                'description' => 'Ceinture large ajustable avec boucle métallique. Structure une silhouette et ajoute du caractère à une robe ou un jean.',
                 'price' => 15000,
                 'discount_price' => null,
-                'sku' => 'CEINT-WAX-001',
+                'sku' => 'CEINT-001',
                 'stock' => 22,
                 'images' => [
                     'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&h=800&fit=crop',
@@ -176,12 +176,12 @@ class ProductSeeder extends Seeder
             // Sacs
             [
                 'category_id' => $sacs?->id ?? 4,
-                'name' => 'Sac à Main en Pagne Togolais',
-                'slug' => 'sac-main-pagne-togolais',
-                'description' => 'Sac à main élégant confectionné en pagne authentique du Togo. Doublure intérieure, plusieurs compartiments. Design unique qui allie tradition et modernité.',
+                'name' => 'Sac à main structuré — Quotidien',
+                'slug' => 'sac-main-structure-quotidien',
+                'description' => 'Sac à main pratique avec doublure et plusieurs compartiments. Design contemporain pour accompagner vos journées en ville.',
                 'price' => 38000,
                 'discount_price' => 32000,
-                'sku' => 'SAC-PAGNE-001',
+                'sku' => 'SAC-MAIN-001',
                 'stock' => 15,
                 'images' => [
                     'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=800&fit=crop',
@@ -193,12 +193,12 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $sacs?->id ?? 4,
-                'name' => 'Pochette en Wax Togolais',
-                'slug' => 'pochette-wax-togolais',
-                'description' => 'Pochette moderne en tissu wax du Togo. Parfaite pour les sorties. Fermeture à zip, compartiment principal. Design coloré et authentique.',
+                'name' => 'Pochette soirée — Fermeture zip',
+                'slug' => 'pochette-soiree-fermeture-zip',
+                'description' => 'Pochette compacte pour les sorties. Fermeture à zip, format idéal pour l’essentiel. Un accessoire coloré qui sublime un look simple.',
                 'price' => 18000,
                 'discount_price' => null,
-                'sku' => 'POCH-WAX-001',
+                'sku' => 'POCH-001',
                 'stock' => 20,
                 'images' => [
                     'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&h=800&fit=crop',
@@ -212,9 +212,9 @@ class ProductSeeder extends Seeder
             // Bijoux
             [
                 'category_id' => $bijoux?->id ?? 5,
-                'name' => 'Collier en Perles Togolaises - Artisanat',
-                'slug' => 'collier-perles-togolaises-artisanat',
-                'description' => 'Collier authentique en perles artisanales du Togo. Perles colorées traditionnelles, longueur ajustable. Pièce unique fabriquée par des artisans locaux.',
+                'name' => 'Collier perles — Longueur ajustable',
+                'slug' => 'collier-perles-longueur-ajustable',
+                'description' => 'Collier en perles colorées, longueur ajustable. Une pièce signature pour rehausser un col rond ou un décolleté.',
                 'price' => 25000,
                 'discount_price' => 20000,
                 'sku' => 'COLL-PERLE-001',
@@ -229,9 +229,9 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $bijoux?->id ?? 5,
-                'name' => 'Boucles d\'Oreilles en Bois Togolais',
-                'slug' => 'boucles-oreilles-bois-togolais',
-                'description' => 'Boucles d\'oreilles élégantes en bois sculpté du Togo. Design traditionnel, légères et confortables. Parfaites pour ajouter une touche d\'authenticité à votre style.',
+                'name' => 'Boucles d’oreilles bois — Design léger',
+                'slug' => 'boucles-oreilles-bois-design-leger',
+                'description' => 'Boucles d’oreilles en bois, légères et confortables. Un détail naturel qui apporte du caractère sans alourdir le look.',
                 'price' => 15000,
                 'discount_price' => null,
                 'sku' => 'BOUC-BOIS-001',
@@ -246,9 +246,9 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $bijoux?->id ?? 5,
-                'name' => 'Bracelet en Perles Africaines',
-                'slug' => 'bracelet-perles-africaines',
-                'description' => 'Bracelet coloré en perles africaines traditionnelles. Élastique ajustable, confortable à porter. Design vibrant inspiré de la culture togolaise.',
+                'name' => 'Bracelet perles — Élastique',
+                'slug' => 'bracelet-perles-elastique',
+                'description' => 'Bracelet élastique en perles colorées. Facile à porter seul ou empilé — une touche vive pour tous les jours.',
                 'price' => 8000,
                 'discount_price' => 6500,
                 'sku' => 'BRAC-PERLE-001',
@@ -265,12 +265,12 @@ class ProductSeeder extends Seeder
             // Beauté
             [
                 'category_id' => $beaute?->id ?? 6,
-                'name' => 'Beurre de Karité du Togo - Pur',
-                'slug' => 'beurre-karite-togo-pur',
-                'description' => 'Beurre de karité 100% pur et naturel du Togo. Produit par des coopératives locales. Hydratant intense pour la peau et les cheveux. Emballage éco-responsable.',
+                'name' => 'Beurre de karité — Pur',
+                'slug' => 'beurre-karite-pur',
+                'description' => 'Beurre de karité 100 % pur pour hydrater intensément peau et cheveux. Soin multi-usages, texture riche, format pratique.',
                 'price' => 12000,
                 'discount_price' => 10000,
-                'sku' => 'KARITE-TOGO-001',
+                'sku' => 'KARITE-001',
                 'stock' => 40,
                 'images' => [
                     'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800&h=800&fit=crop',
@@ -282,12 +282,12 @@ class ProductSeeder extends Seeder
             ],
             [
                 'category_id' => $beaute?->id ?? 6,
-                'name' => 'Huile de Coco Togolaise - Bio',
-                'slug' => 'huile-coco-togolaise-bio',
-                'description' => 'Huile de coco vierge bio produite au Togo. Multi-usages : soin capillaire, hydratation corporelle, massage. 100% naturelle, sans additifs.',
+                'name' => 'Huile de coco — Vierge',
+                'slug' => 'huile-coco-vierge',
+                'description' => 'Huile de coco vierge multi-usages : soins capillaires, hydratation corporelle, massage. Formule naturelle, sans additifs.',
                 'price' => 15000,
                 'discount_price' => null,
-                'sku' => 'COCO-TOGO-001',
+                'sku' => 'COCO-001',
                 'stock' => 30,
                 'images' => [
                     'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800&h=800&fit=crop',
@@ -320,4 +320,3 @@ class ProductSeeder extends Seeder
         $this->command->info('Produits créés avec succès!');
     }
 }
-

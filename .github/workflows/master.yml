@@ -1,4 +1,4 @@
-name: Deploy GloShop Laravel to Production (Port 6500)
+name: Deploy Mishop Laravel to Production (Port 6500)
 
 on:
   push:
@@ -75,7 +75,7 @@ jobs:
             cd $DEPLOY_PATH
             
             echo "=========================================="
-            echo "🚀 Déploiement GloShop Laravel (Port 6500)"
+            echo "🚀 Déploiement Mishop Laravel (Port 6500)"
             echo "=========================================="
             
             # 1. Sauvegarder .env s'il existe
@@ -165,7 +165,7 @@ jobs:
             else
               echo "❌ ERREUR: .env.example n'existe pas et .env n'existe pas non plus!"
               echo "Création d'un .env minimal d'urgence..."
-              printf "APP_NAME=GloShop\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=http://localhost:6500\n\nLOG_CHANNEL=stack\nLOG_LEVEL=error\n\nDB_CONNECTION=mysql\nDB_HOST=host.docker.internal\nDB_PORT=3306\nDB_DATABASE=gloshop\nDB_USERNAME=gloshop\nDB_PASSWORD=\n\nBROADCAST_DRIVER=log\nCACHE_DRIVER=redis\nFILESYSTEM_DISK=local\nQUEUE_CONNECTION=redis\nSESSION_DRIVER=redis\nSESSION_LIFETIME=120\n\nREDIS_HOST=redis\nREDIS_PASSWORD=null\nREDIS_PORT=6379\n" > .env
+              printf "APP_NAME=Mishop\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=http://localhost:6500\n\nLOG_CHANNEL=stack\nLOG_LEVEL=error\n\nDB_CONNECTION=mysql\nDB_HOST=host.docker.internal\nDB_PORT=3306\nDB_DATABASE=gloshop\nDB_USERNAME=gloshop\nDB_PASSWORD=\n\nBROADCAST_DRIVER=log\nCACHE_DRIVER=redis\nFILESYSTEM_DISK=local\nQUEUE_CONNECTION=redis\nSESSION_DRIVER=redis\nSESSION_LIFETIME=120\n\nREDIS_HOST=redis\nREDIS_PASSWORD=null\nREDIS_PORT=6379\n" > .env
               echo "✅ .env minimal créé"
               echo "⚠️  URGENT: Configurez .env avec toutes les valeurs nécessaires!"
             fi

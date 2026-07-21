@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de test pour tous les endpoints de l'API GloShop
+# Script de test pour tous les endpoints de l'API Mishop
 # Usage: ./test-api.sh
 
 BASE_URL="http://localhost:8000/api"
@@ -8,7 +8,7 @@ USER_TOKEN=""
 ADMIN_TOKEN=""
 
 echo "=========================================="
-echo "Test des endpoints API GloShop"
+echo "Test des endpoints API Mishop"
 echo "=========================================="
 echo ""
 
@@ -114,7 +114,7 @@ echo -n "Test: Login admin ... "
 admin_login_response=$(curl -s -X POST "$BASE_URL/admin/login" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
-    -d '{"email":"admin@gloshop.com","password":"password123"}')
+    -d '{"email":"admin@mishop.com","password":"password123"}')
 ADMIN_TOKEN=$(echo $admin_login_response | grep -o '"token":"[^"]*' | cut -d'"' -f4)
 if [ -n "$ADMIN_TOKEN" ]; then
     echo -e "${GREEN}OK${NC}"

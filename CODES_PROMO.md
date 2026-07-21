@@ -1,4 +1,4 @@
-# Codes Promo GloShop
+# Codes Promo Mishop
 
 ## Liste des codes promo disponibles
 
@@ -62,6 +62,15 @@
 - **Utilisation**: Illimitée
 - **Validité**: 1 an
 - **Description**: Code promo de test pour le développement
+
+### 8. **MISHOP10** ✨
+- **Type**: Pourcentage
+- **Réduction**: 10%
+- **Montant minimum**: Aucun
+- **Réduction maximale**: 5,000 FCFA
+- **Utilisation**: Illimitée au total, 5 fois par utilisateur
+- **Validité**: 1 an
+- **Description**: Code démo Mishop (app mobile)
 
 ---
 
