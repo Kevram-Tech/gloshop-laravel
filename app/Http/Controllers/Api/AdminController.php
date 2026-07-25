@@ -570,7 +570,7 @@ class AdminController extends Controller
                 DB::raw('SUM(order_items.quantity) as total_quantity'),
                 DB::raw('SUM(order_items.price * order_items.quantity) as total_revenue')
             )
-            ->groupBy('products.id', 'products.name', 'products.sku', 'products.images', 'products.price')
+            ->groupBy('products.id')
             ->orderByDesc('total_quantity')
             ->limit(10)
             ->get()
