@@ -6,7 +6,7 @@ Quand Laravel tourne dans Docker et que MySQL est sur l’hôte, MySQL reçoit l
 
 ### 1. Se connecter à MySQL
 
-En SSH sur le serveur (72.60.188.146) :
+En SSH sur le serveur (46.202.153.86) :
 
 ```bash
 mysql -u root -p
@@ -63,4 +63,4 @@ sudo ufw reload
 | **MySQL**  | `bind-address = 0.0.0.0` puis redémarrer MySQL |
 | **Firewall** | Autoriser le port 3306 si besoin |
 
-Après ça, le conteneur Docker (Laravel) peut se connecter à MySQL avec `DB_HOST=72.60.188.146` (ou `host.docker.internal` si Docker et MySQL sont sur la même machine).
+Après ça, le conteneur Docker (Laravel) peut se connecter à MySQL avec `DB_HOST=46.202.153.86` (ou `host.docker.internal` si Docker et MySQL sont sur la même machine).

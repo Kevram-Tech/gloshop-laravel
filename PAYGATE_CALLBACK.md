@@ -5,7 +5,7 @@
 L'URL de callback PayGate pour cette application est :
 
 ```
-http://72.60.188.146:6500/api/payments/paygate/callback
+http://46.202.153.86:6500/api/payments/paygate/callback
 ```
 
 ## Configuration dans PayGate
@@ -43,7 +43,7 @@ PayGate enverra les données suivantes au callback :
 Pour tester le callback, vous pouvez utiliser curl :
 
 ```bash
-curl -X POST http://72.60.188.146:6500/api/payments/paygate/callback \
+curl -X POST http://46.202.153.86:6500/api/payments/paygate/callback \
   -H "Content-Type: application/json" \
   -d '{
     "tx_reference": "TEST123",

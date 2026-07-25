@@ -20,8 +20,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://72.60.188.146:6500',
-        'https://72.60.188.146:6500',
+        'http://46.202.153.86:6500',
+        'https://46.202.153.86:6500',
         'http://localhost:6500',
         'http://localhost:3000',
         'http://localhost:8080',

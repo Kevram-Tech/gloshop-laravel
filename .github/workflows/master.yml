@@ -104,10 +104,10 @@ jobs:
               # Vérifier et mettre à jour APP_URL pour la production
               if grep -q "^APP_URL=" .env; then
                 CURRENT_URL=$(grep "^APP_URL=" .env | cut -d'=' -f2)
-                if [ "$CURRENT_URL" != "http://72.60.188.146:6500" ]; then
-                  echo "🔧 Mise à jour de APP_URL vers http://72.60.188.146:6500..."
-                  sed -i 's|^APP_URL=.*|APP_URL=http://72.60.188.146:6500|' .env || \
-                  sed -i.bak 's|^APP_URL=.*|APP_URL=http://72.60.188.146:6500|' .env || true
+                if [ "$CURRENT_URL" != "http://46.202.153.86:6500" ]; then
+                  echo "🔧 Mise à jour de APP_URL vers http://46.202.153.86:6500..."
+                  sed -i 's|^APP_URL=.*|APP_URL=http://46.202.153.86:6500|' .env || \
+                  sed -i.bak 's|^APP_URL=.*|APP_URL=http://46.202.153.86:6500|' .env || true
                   rm -f .env.bak
                 fi
               fi
@@ -123,8 +123,8 @@ jobs:
               echo "🔧 Adaptation des valeurs pour Docker..."
               # APP_URL pour la production
               if grep -q "^APP_URL=" .env; then
-                sed -i 's|^APP_URL=.*|APP_URL=http://72.60.188.146:6500|' .env || \
-                sed -i.bak 's|^APP_URL=.*|APP_URL=http://72.60.188.146:6500|' .env || true
+                sed -i 's|^APP_URL=.*|APP_URL=http://46.202.153.86:6500|' .env || \
+                sed -i.bak 's|^APP_URL=.*|APP_URL=http://46.202.153.86:6500|' .env || true
               fi
               
               # DB_HOST pour Docker

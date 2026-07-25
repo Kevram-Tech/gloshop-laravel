@@ -26,7 +26,7 @@ class AdminController extends Controller
             return [];
         }
 
-        $baseUrl = $baseUrl ?? config('app.url', 'http://72.60.188.146:6500');
+        $baseUrl = $baseUrl ?? config('app.url', 'http://46.202.153.86:6500');
         
         return array_map(function ($image) use ($baseUrl) {
             if (filter_var($image, FILTER_VALIDATE_URL)) {
@@ -209,7 +209,7 @@ class AdminController extends Controller
         $product = Product::with('category')->findOrFail($id);
 
         // Transform images to full URLs
-        $baseUrl = config('app.url', 'http://72.60.188.146:6500');
+        $baseUrl = config('app.url', 'http://46.202.153.86:6500');
         if (!empty($product->images)) {
             $product->images = array_map(function ($image) use ($baseUrl) {
                 if (filter_var($image, FILTER_VALIDATE_URL)) {
@@ -246,7 +246,7 @@ class AdminController extends Controller
         }
 
         $uploadedImages = [];
-        $baseUrl = config('app.url', 'http://72.60.188.146:6500');
+        $baseUrl = config('app.url', 'http://46.202.153.86:6500');
 
         foreach ($request->file('images') as $image) {
             $filename = 'products/' . time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
@@ -580,7 +580,7 @@ class AdminController extends Controller
                 
                 // Transform image URL if needed
                 if ($firstImage && !filter_var($firstImage, FILTER_VALIDATE_URL)) {
-                    $baseUrl = config('app.url', 'http://72.60.188.146:6500');
+                    $baseUrl = config('app.url', 'http://46.202.153.86:6500');
                     $firstImage = rtrim($baseUrl, '/') . '/storage/' . ltrim($firstImage, '/');
                 }
                 
@@ -618,7 +618,7 @@ class AdminController extends Controller
             
             // Transform image URL if needed
             if ($firstImage && !filter_var($firstImage, FILTER_VALIDATE_URL)) {
-                $baseUrl = config('app.url', 'http://72.60.188.146:6500');
+                $baseUrl = config('app.url', 'http://46.202.153.86:6500');
                 $firstImage = rtrim($baseUrl, '/') . '/storage/' . ltrim($firstImage, '/');
             }
 

@@ -22,7 +22,7 @@ class PaymentController extends Controller
      */
     private function getCallbackUrl(): string
     {
-        $appUrl = config('app.url', 'http://72.60.188.146:6500');
+        $appUrl = config('app.url', 'http://46.202.153.86:6500');
         return rtrim($appUrl, '/') . '/api/payments/paygate/callback';
     }
 
@@ -106,7 +106,7 @@ class PaymentController extends Controller
      * Handle PayGate callback
      * 
      * This endpoint is called by PayGate when a payment is completed.
-     * URL: http://72.60.188.146:6500/api/payments/paygate/callback
+     * URL: http://46.202.153.86:6500/api/payments/paygate/callback
      * 
      * PayGate will send the following data:
      * - tx_reference: Transaction reference from PayGate
